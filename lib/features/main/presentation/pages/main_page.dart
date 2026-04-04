@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../my/presentation/pages/my_page.dart';
 import '../../../record/presentation/pages/record_page.dart';
@@ -24,8 +25,10 @@ class _MainPageState extends State<MainPage> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: colors.background,
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -46,12 +49,12 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F0F0F),
-        border: Border(
-          top: BorderSide(color: Color(0xFF1E1E1E)),
-        ),
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.borderLight)),
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
@@ -59,8 +62,8 @@ class _BottomNav extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        selectedItemColor: const Color(0xFF8B7CF6),
-        unselectedItemColor: const Color(0xFF444444),
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: colors.inactive,
         selectedFontSize: 11,
         unselectedFontSize: 11,
         items: const [
