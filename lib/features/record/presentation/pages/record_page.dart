@@ -31,6 +31,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
             _FilterChips(
               selected: _filter,
               onChanged: (f) => setState(() => _filter = f),
+              items: all,
             ),
             Expanded(
               child: filtered.isEmpty
@@ -54,78 +55,114 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     final sorted = [...items]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return switch (_filter) {
-      _Filter.all => sorted,
-      _Filter.pending =>
-        sorted.where((i) => i.status == WishItemStatus.waiting).toList(),
+      _Filter.all => sorted
+          .where((i) =>
+              i.status == WishItemStatus.cancelled ||
+              i.status == WishItemStatus.purchased)
+          .toList(),
+      _Filter.resisted =>
+        sorted.where((i) => i.status == WishItemStatus.cancelled).toList(),
       _Filter.purchased =>
         sorted.where((i) => i.status == WishItemStatus.purchased).toList(),
-      _Filter.cancelled =>
-        sorted.where((i) => i.status == WishItemStatus.cancelled).toList(),
     };
   }
 
 }
 
-enum _Filter { all, pending, purchased, cancelled }
+enum _Filter { all, resisted, purchased }
 
 
 class _FilterChips extends StatelessWidget {
-  const _FilterChips({required this.selected, required this.onChanged});
+  const _FilterChips({
+    required this.selected,
+    required this.onChanged,
+    required this.items,
+  });
 
   final _Filter selected;
   final ValueChanged<_Filter> onChanged;
+  final List<WishItem> items;
+
+  int _count(_Filter filter) => switch (filter) {
+        _Filter.all =>
+          items.where((i) => i.status == WishItemStatus.cancelled || i.status == WishItemStatus.purchased).length,
+        _Filter.resisted =>
+          items.where((i) => i.status == WishItemStatus.cancelled).length,
+        _Filter.purchased =>
+          items.where((i) => i.status == WishItemStatus.purchased).length,
+      };
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final filters = <({_Filter filter, String label, IconData icon, Color color})>[
-      (filter: _Filter.all,       label: '전체',  icon: Icons.apps_rounded,          color: colors.textPrimary),
-      (filter: _Filter.pending,   label: '대기중', icon: Icons.access_time_rounded,   color: AppColors.yellow),
-      (filter: _Filter.purchased, label: '구매함', icon: Icons.shopping_bag_outlined, color: AppColors.green),
-      (filter: _Filter.cancelled, label: '취소함', icon: Icons.close_rounded,         color: AppColors.red),
+      (filter: _Filter.all,      label: '전체', icon: Icons.grid_view_rounded,        color: colors.textPrimary),
+      (filter: _Filter.resisted, label: '참음', icon: Icons.self_improvement_rounded, color: AppColors.blue),
+      (filter: _Filter.purchased,label: '구매', icon: Icons.shopping_bag_outlined,    color: AppColors.green),
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: filters.map((entry) {
           final isSelected = selected == entry.filter;
+          final count = _count(entry.filter);
+
           return Expanded(
             child: GestureDetector(
               onTap: () => onChanged(entry.filter),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
+                duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? entry.color.withValues(alpha: 0.12)
-                      : colors.surface,
-                  borderRadius: BorderRadius.circular(14),
+                  color: isSelected ? entry.color : colors.surface,
+                  borderRadius: BorderRadius.circular(24),
                   border: Border.all(
-                    color: isSelected
-                        ? entry.color.withValues(alpha: 0.5)
-                        : colors.border,
+                    color: isSelected ? entry.color : colors.border,
+                    width: isSelected ? 0 : 1,
                   ),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: entry.color.withValues(alpha: 0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : null,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       entry.icon,
-                      size: 16,
-                      color: isSelected ? entry.color : colors.inactive,
+                      size: 15,
+                      color: isSelected ? Colors.white : colors.textTertiary,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 3),
                     Text(
                       entry.label,
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                        color: isSelected ? entry.color : colors.textTertiary,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                        color: isSelected ? Colors.white : colors.textSecondary,
                       ),
                     ),
+                    if (count > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '$count',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: isSelected
+                              ? Colors.white.withValues(alpha: 0.8)
+                              : colors.textTertiary,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -264,12 +301,12 @@ class _StatusBadge extends StatelessWidget {
     final colors = context.colors;
     if (status == WishItemStatus.waiting) {
       if (isExpired) return _badge('결정!', AppColors.accent, Colors.white);
-      return _badge('대기중', colors.surfaceHighlight, colors.textSecondary);
+      return _badge('참기', colors.surfaceHighlight, colors.textSecondary);
     }
     if (status == WishItemStatus.purchased) {
-      return _badge('구매함', AppColors.green.withValues(alpha: 0.15), AppColors.green);
+      return _badge('구매', AppColors.green.withValues(alpha: 0.15), AppColors.green);
     }
-    return _badge('취소함', colors.surfaceHighlight, colors.textTertiary);
+    return _badge('참음', AppColors.blue.withValues(alpha: 0.15), AppColors.blue);
   }
 
   Widget _badge(String label, Color bg, Color textColor) {

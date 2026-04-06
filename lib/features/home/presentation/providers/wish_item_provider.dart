@@ -18,6 +18,7 @@ class WishItemNotifier extends _$WishItemNotifier {
       onError: (Object e, StackTrace st) => state = AsyncValue.error(e, st),
     );
     ref.onDispose(sub.cancel);
+    // Firestore는 첫 이벤트가 비동기이므로 캐시된 items로 초기화
     return AsyncValue.data(repository.items);
   }
 
@@ -49,12 +50,21 @@ class WishItemNotifier extends _$WishItemNotifier {
 
 @riverpod
 List<WishItem> waitingItems(Ref ref) {
-  return ref
+  final items = ref
           .watch(wishItemNotifierProvider)
           .valueOrNull
           ?.where((i) => i.status == WishItemStatus.waiting)
           .toList() ??
       [];
+
+  items.sort((a, b) {
+    // 만료된 항목 우선
+    if (a.isExpired != b.isExpired) return a.isExpired ? -1 : 1;
+    // 남은 시간 적은 순
+    return a.remainingDuration.compareTo(b.remainingDuration);
+  });
+
+  return items;
 }
 
 @riverpod

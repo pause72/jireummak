@@ -6,7 +6,7 @@ part of 'wish_item_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$waitingItemsHash() => r'27a3052482f53f6017abac14da2ac886f8f46860';
+String _$waitingItemsHash() => r'4fb7b842d6115f18818a990cda6b47e1f09f9591';
 
 /// See also [waitingItems].
 @ProviderFor(waitingItems)

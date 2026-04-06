@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -49,7 +50,9 @@ class _SplashPageState extends State<SplashPage>
     _controller.forward();
 
     Future.delayed(const Duration(milliseconds: 2800), () {
-      if (mounted) context.go('/login');
+      if (!mounted) return;
+      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      context.go(isLoggedIn ? '/main' : '/login');
     });
   }
 
@@ -92,36 +95,29 @@ class _Logo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // pause ∥ icon
-        const Icon(
-          Icons.pause_circle_outline_rounded,
-          size: 64,
-          color: Color(0xFFE8E8E8),
+        // 지름막 icon
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: const Color(0xFF8B7CF6),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: const Center(
+            child: Text(
+              '🛑',
+              style: TextStyle(fontSize: 36),
+            ),
+          ),
         ),
-        const SizedBox(height: 16),
-        RichText(
-          text: const TextSpan(
-            children: [
-              TextSpan(
-                text: 'pause',
-                style: TextStyle(
-                  fontFamily: 'serif',
-                  fontSize: 42,
-                  fontWeight: FontWeight.w300,
-                  color: Color(0xFFE8E8E8),
-                  letterSpacing: 6,
-                ),
-              ),
-              TextSpan(
-                text: '72',
-                style: TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF8B7CF6),
-                  letterSpacing: 2,
-                ),
-              ),
-            ],
+        const SizedBox(height: 20),
+        const Text(
+          '지름막',
+          style: TextStyle(
+            fontSize: 42,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFFE8E8E8),
+            letterSpacing: 4,
           ),
         ),
       ],
@@ -136,7 +132,7 @@ class _Subtitle extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: const [
         Text(
-          '사기 전에 72시간,',
+          '사기 전에 72시간 참기,',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,

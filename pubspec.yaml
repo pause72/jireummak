@@ -22,9 +22,13 @@ dependencies:
   firebase_auth: ^5.5.2
   cloud_firestore: ^5.6.5
   firebase_storage: ^12.4.5
+  google_sign_in: ^6.2.2
 
   # Routing
   go_router: ^14.8.1
+
+  # Local Storage
+  shared_preferences: ^2.3.3
 
   # Utilities
   freezed_annotation: ^3.0.0

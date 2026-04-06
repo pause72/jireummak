@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_provider.dart';
+import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../features/explore/presentation/pages/explore_page.dart';
+import '../../../../features/home/domain/models/wish_stats.dart';
 import '../../../../features/home/presentation/providers/wish_item_provider.dart';
 
 class MyPage extends ConsumerWidget {
@@ -12,6 +15,9 @@ class MyPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stats = ref.watch(wishStatsProvider);
+    final authAsync = ref.watch(authStateProvider);
+    final user = authAsync.valueOrNull;
+    final isLoggedIn = user != null;
     final colors = context.colors;
 
     return Scaffold(
@@ -24,95 +30,76 @@ class MyPage extends ConsumerWidget {
             children: [
               const SizedBox(height: 20),
               // 프로필
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colors.border),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        color: colors.surface2,
+              GestureDetector(
+                onTap: user == null ? () => context.go('/login') : null,
+                child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: colors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colors.border),
+                  ),
+                  child: Row(
+                    children: [
+                      // 프로필 사진
+                      ClipRRect(
                         borderRadius: BorderRadius.circular(26),
+                        child: user?.photoUrl != null
+                            ? Image.network(
+                                user!.photoUrl!,
+                                width: 52,
+                                height: 52,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, _, _) => _DefaultAvatar(colors: colors),
+                              )
+                            : _DefaultAvatar(colors: colors),
                       ),
-                      child: Icon(
-                        Icons.person_outline,
-                        color: colors.inactive,
-                        size: 26,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '로그인이 필요해요',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: colors.textPrimary,
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              user?.displayName ?? '로그인이 필요해요',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: colors.textPrimary,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Google 로그인으로 데이터를 보관하세요',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colors.textTertiary,
+                            const SizedBox(height: 4),
+                            Text(
+                              user?.email ?? 'Google 로그인으로 데이터를 보관하세요',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colors.textTertiary,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.chevron_right,
-                      color: colors.inactive,
-                      size: 20,
-                    ),
-                  ],
+                      if (user == null)
+                        Icon(Icons.chevron_right, color: colors.inactive, size: 20),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
-              // 요약 카드
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [colors.gradStart, colors.gradEnd],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.3),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _SummaryItem(
-                        label: '참은 횟수',
-                        value: '${stats.cancelledCount}번',
-                        color: AppColors.green,
-                      ),
+              _StatsSummaryCard(stats: stats),
+              const SizedBox(height: 24),
+              _SectionTitle('배움', colors: colors),
+              const SizedBox(height: 10),
+              _SettingsGroup(
+                colors: colors,
+                items: [
+                  _SettingsItem(
+                    icon: Icons.menu_book_rounded,
+                    label: '배움',
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(builder: (_) => const _LearnDetailPage()),
                     ),
-                    Container(width: 1, height: 40, color: colors.border),
-                    Expanded(
-                      child: _SummaryItem(
-                        label: '대기 중',
-                        value: '${stats.waitingCount}개',
-                        color: AppColors.yellow,
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               _SectionTitle('설정', colors: colors),
@@ -157,18 +144,25 @@ class MyPage extends ConsumerWidget {
               _SettingsGroup(
                 colors: colors,
                 items: [
-                  _SettingsItem(
-                    icon: Icons.logout_rounded,
-                    label: '로그아웃',
-                    labelColor: AppColors.red,
-                    onTap: () => _showLogoutDialog(context),
-                  ),
+                  if (isLoggedIn)
+                    _SettingsItem(
+                      icon: Icons.logout_rounded,
+                      label: '로그아웃',
+                      labelColor: AppColors.red,
+                      onTap: () => _showLogoutDialog(context, ref),
+                    )
+                  else
+                    _SettingsItem(
+                      icon: Icons.login_rounded,
+                      label: 'Google로 로그인',
+                      onTap: () => context.go('/login'),
+                    ),
                 ],
               ),
               const SizedBox(height: 32),
               Center(
                 child: Text(
-                  'pause72 · 충동구매를 멈추는 72시간의 습관',
+                  '지름막 · 충동구매를 막는 72시간의 습관',
                   style: TextStyle(
                     fontSize: 11,
                     color: colors.border,
@@ -183,7 +177,7 @@ class MyPage extends ConsumerWidget {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     showDialog<void>(
       context: context,
@@ -198,7 +192,10 @@ class MyPage extends ConsumerWidget {
             child: Text('취소', style: TextStyle(color: colors.textSecondary)),
           ),
           TextButton(
-            onPressed: () { Navigator.of(ctx).pop(); context.go('/login'); },
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              await ref.read(authNotifierProvider.notifier).signOut();
+            },
             child: const Text('로그아웃', style: TextStyle(color: AppColors.red)),
           ),
         ],
@@ -207,22 +204,127 @@ class MyPage extends ConsumerWidget {
   }
 }
 
+class _StatsSummaryCard extends StatelessWidget {
+  const _StatsSummaryCard({required this.stats});
+  final WishStats stats;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [colors.gradStart, colors.gradEnd],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '총 절약 금액',
+                  style: TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w500, letterSpacing: 0.4),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  stats.savedAmount == 0 ? '₩ 0원' : stats.formattedSaved,
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: colors.textPrimary, letterSpacing: -0.3),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                _SummaryItem(label: '참음', value: '${stats.cancelledCount}번', color: AppColors.blue),
+                _Divider(),
+                _SummaryItem(label: '구매', value: '${stats.purchasedCount}번', color: AppColors.green),
+                _Divider(),
+                _SummaryItem(label: '총 등록', value: '${stats.totalCount}개', color: AppColors.accent),
+              ],
+            ),
+            if (stats.decidedCount > 0) ...[
+              const SizedBox(height: 16),
+              Divider(color: AppColors.accent.withValues(alpha: 0.2), height: 1),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '충동구매 저항률',
+                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
+                  ),
+                  Text(
+                    '${(stats.saveRate * 100).toStringAsFixed(0)}%',
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.accent),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: LinearProgressIndicator(
+                  value: stats.saveRate,
+                  minHeight: 6,
+                  backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+                ),
+              ),
+            ],
+          ],
+        ),
+    );
+  }
+}
+
+class _DefaultAvatar extends StatelessWidget {
+  const _DefaultAvatar({required this.colors});
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      color: colors.surface2,
+      child: Icon(Icons.person_outline, color: colors.inactive, size: 26),
+    );
+  }
+}
+
 class _SummaryItem extends StatelessWidget {
   const _SummaryItem({required this.label, required this.value, required this.color});
-
   final String label;
   final String value;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(value, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color), textAlign: TextAlign.center),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(fontSize: 11, color: Color(0xFF666666)), textAlign: TextAlign.center),
-      ],
+    final colors = context.colors;
+    return Expanded(
+      child: Column(
+        children: [
+          Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color), textAlign: TextAlign.center),
+          const SizedBox(height: 3),
+          Text(label, style: TextStyle(fontSize: 10, color: colors.textTertiary), textAlign: TextAlign.center),
+        ],
+      ),
     );
+  }
+}
+
+class _Divider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 28, color: context.colors.border);
   }
 }
 
@@ -349,17 +451,15 @@ class _ThemeToggleCard extends ConsumerWidget {
             child: Row(
               children: [
                 _ThemeSegment(
-                  icon: Icons.dark_mode_rounded,
-                  label: '다크',
-                  selected: isDark,
-                  onTap: () => ref.read(themeNotifierProvider.notifier).setDark(),
+                  icon: Icons.light_mode_rounded,
+                  selected: !isDark,
+                  onTap: () => ref.read(themeNotifierProvider.notifier).setLight(),
                 ),
                 const SizedBox(width: 4),
                 _ThemeSegment(
-                  icon: Icons.light_mode_rounded,
-                  label: '라이트',
-                  selected: !isDark,
-                  onTap: () => ref.read(themeNotifierProvider.notifier).setLight(),
+                  icon: Icons.dark_mode_rounded,
+                  selected: isDark,
+                  onTap: () => ref.read(themeNotifierProvider.notifier).setDark(),
                 ),
               ],
             ),
@@ -373,13 +473,11 @@ class _ThemeToggleCard extends ConsumerWidget {
 class _ThemeSegment extends StatelessWidget {
   const _ThemeSegment({
     required this.icon,
-    required this.label,
     required this.selected,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -397,22 +495,38 @@ class _ThemeSegment extends StatelessWidget {
           color: selected ? AppColors.accent : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: selected ? Colors.white : colors.inactive),
-            const SizedBox(width: 5),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: selected ? Colors.white : colors.inactive,
-              ),
-            ),
-          ],
-        ),
+        child: Icon(icon, size: 16, color: selected ? Colors.white : colors.inactive),
       ),
     );
   }
 }
+
+class _LearnDetailPage extends StatelessWidget {
+  const _LearnDetailPage();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: colors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          '배움',
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: colors.textPrimary),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 40),
+        child: const ExploreContent(),
+      ),
+    );
+  }
+}
+

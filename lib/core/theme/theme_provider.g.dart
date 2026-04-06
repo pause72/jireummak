@@ -6,7 +6,25 @@ part of 'theme_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$themeNotifierHash() => r'e91b5467af46d1eb55a7c7f9eae6e64a77ba1284';
+String _$sharedPreferencesHash() => r'6c03b929f567eb6f97608f6208b95744ffee3bfd';
+
+/// See also [sharedPreferences].
+@ProviderFor(sharedPreferences)
+final sharedPreferencesProvider =
+    AutoDisposeFutureProvider<SharedPreferences>.internal(
+      sharedPreferences,
+      name: r'sharedPreferencesProvider',
+      debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
+          ? null
+          : _$sharedPreferencesHash,
+      dependencies: null,
+      allTransitiveDependencies: null,
+    );
+
+@Deprecated('Will be removed in 3.0. Use Ref instead')
+// ignore: unused_element
+typedef SharedPreferencesRef = AutoDisposeFutureProviderRef<SharedPreferences>;
+String _$themeNotifierHash() => r'27861a235e63b80f91f1c7e3bdf6e739e4a4547c';
 
 /// See also [ThemeNotifier].
 @ProviderFor(ThemeNotifier)

@@ -13,7 +13,7 @@ class App extends ConsumerWidget {
     final themeMode = ref.watch(themeNotifierProvider);
 
     return MaterialApp.router(
-      title: 'pause72',
+      title: '지름막',
       routerConfig: router,
       themeMode: themeMode,
       theme: _lightTheme,

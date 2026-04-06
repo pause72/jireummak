@@ -26,15 +26,15 @@ class StatsPage extends ConsumerWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _StatCard(label: '참은 횟수', value: '${stats.cancelledCount}번', icon: Icons.self_improvement_rounded, color: AppColors.accent)),
+                  Expanded(child: _StatCard(label: '참음', value: '${stats.cancelledCount}번', icon: Icons.self_improvement_rounded, color: AppColors.accent)),
                   const SizedBox(width: 12),
-                  Expanded(child: _StatCard(label: '구매한 횟수', value: '${stats.purchasedCount}번', icon: Icons.shopping_bag_outlined, color: AppColors.green)),
+                  Expanded(child: _StatCard(label: '구매', value: '${stats.purchasedCount}번', icon: Icons.shopping_bag_outlined, color: AppColors.green)),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _StatCard(label: '대기 중', value: '${stats.waitingCount}개', icon: Icons.pending_actions_outlined, color: AppColors.yellow)),
+                  Expanded(child: _StatCard(label: '참기', value: '${stats.waitingCount}개', icon: Icons.pending_actions_outlined, color: AppColors.yellow)),
                   const SizedBox(width: 12),
                   Expanded(child: _StatCard(label: '총 등록', value: '${stats.totalCount}개', icon: Icons.list_alt_rounded, color: AppColors.blue)),
                 ],

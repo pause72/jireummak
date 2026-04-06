@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../explore/presentation/pages/explore_page.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../my/presentation/pages/my_page.dart';
 import '../../../record/presentation/pages/record_page.dart';
-import '../../../stats/presentation/pages/stats_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -19,7 +19,7 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = const [
     HomePage(),
     RecordPage(),
-    StatsPage(),
+    ExplorePage(),
     MyPage(),
   ];
 
@@ -70,7 +70,7 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.pending_actions_outlined),
             activeIcon: Icon(Icons.pending_actions),
-            label: '대기중',
+            label: '참기',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
@@ -78,9 +78,9 @@ class _BottomNav extends StatelessWidget {
             label: '기록',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart),
-            label: '통계',
+            icon: Icon(Icons.explore_outlined),
+            activeIcon: Icon(Icons.explore),
+            label: '나눔',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
