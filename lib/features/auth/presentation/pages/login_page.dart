@@ -82,15 +82,15 @@ class LoginPage extends ConsumerWidget {
                   ),
                   const SizedBox(width: 20),
                   _SocialIconButton.naver(
-                    isLoading: false,
-                    onPressed: () {},
-                    disabled: true,
+                    isLoading: isLoading,
+                    onPressed: () =>
+                        ref.read(authNotifierProvider.notifier).signInWithNaver(),
                   ),
                   const SizedBox(width: 20),
                   _SocialIconButton.kakao(
-                    isLoading: false,
-                    onPressed: () {},
-                    disabled: true,
+                    isLoading: isLoading,
+                    onPressed: () =>
+                        ref.read(authNotifierProvider.notifier).signInWithKakao(),
                   ),
                 ],
               ),
@@ -190,13 +190,13 @@ class _SocialIconButton extends StatelessWidget {
           border: Border.all(color: _borderColor, width: 1.5),
         ),
         child: Center(
-          child: isLoading && provider == _SocialProvider.google
+          child: isLoading
               ? const SizedBox(
                   width: 22,
                   height: 22,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Color(0xFF8B7CF6),
+                    color: Color(0xFF4D8FE8),
                   ),
                 )
               : _icon,

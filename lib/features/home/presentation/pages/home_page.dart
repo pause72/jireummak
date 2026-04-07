@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/ads/interstitial_ad_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../providers/wish_item_provider.dart';
 import '../widgets/empty_waiting_state.dart';
@@ -86,6 +88,7 @@ class _AddItemSheetState extends State<_AddItemSheet> {
           reason: reason.isNotEmpty ? reason : null,
         );
     Navigator.of(context).pop();
+    InterstitialAdService.instance.show();
   }
 
   @override
@@ -112,15 +115,25 @@ class _AddItemSheetState extends State<_AddItemSheet> {
             ),
           ),
           const SizedBox(height: 20),
-          _Field(controller: _nameController, hint: '아이템 이름 (필수)', autofocus: true),
+          _Field(
+            controller: _nameController,
+            hint: '아이템 이름 (필수)',
+            autofocus: true,
+            maxLength: 20,
+          ),
           const SizedBox(height: 12),
           _Field(
             controller: _priceController,
             hint: '가격 (선택)',
             keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           ),
           const SizedBox(height: 12),
-          _Field(controller: _reasonController, hint: '왜 사고 싶은가요? (선택)'),
+          _Field(
+            controller: _reasonController,
+            hint: '왜 사고 싶은가요? (선택)',
+            maxLength: 50,
+          ),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,
@@ -153,12 +166,16 @@ class _Field extends StatelessWidget {
     required this.hint,
     this.keyboardType,
     this.autofocus = false,
+    this.maxLength,
+    this.inputFormatters,
   });
 
   final TextEditingController controller;
   final String hint;
   final TextInputType? keyboardType;
   final bool autofocus;
+  final int? maxLength;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -168,6 +185,8 @@ class _Field extends StatelessWidget {
       controller: controller,
       autofocus: autofocus,
       keyboardType: keyboardType,
+      maxLength: maxLength,
+      inputFormatters: inputFormatters,
       style: TextStyle(color: colors.textPrimary, fontSize: 15),
       decoration: InputDecoration(
         hintText: hint,
@@ -180,6 +199,7 @@ class _Field extends StatelessWidget {
         ),
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        counterStyle: TextStyle(fontSize: 11, color: colors.textTertiary),
       ),
     );
   }
@@ -200,7 +220,7 @@ class _AddButton extends StatelessWidget {
           height: 56,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF8B7CF6), Color(0xFF6C5CE7)],
+              colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
             ),

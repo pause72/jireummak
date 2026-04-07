@@ -23,6 +23,20 @@ class AuthNotifier extends _$AuthNotifier {
     );
   }
 
+  Future<void> signInWithNaver() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signInWithNaver(),
+    );
+  }
+
+  Future<void> signInWithKakao() async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(
+      () => ref.read(authRepositoryProvider).signInWithKakao(),
+    );
+  }
+
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();
     state = const AsyncValue.data(null);

@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -9,9 +7,9 @@ import '../../domain/models/wish_item_status.dart';
 import '../providers/wish_item_provider.dart';
 
 Color _progressColor(double ratio) {
-  if (ratio <= 0.25) return const Color(0xFF94A3B8); // 슬레이트 — 시작
-  if (ratio <= 0.50) return const Color(0xFF60A5FA); // 블루 — 진행중
-  if (ratio <= 0.75) return const Color(0xFF2DD4BF); // 틸 — 잘 버티는 중
+  if (ratio <= 0.25) return const Color(0xFF4A6080); // 다크 블루 — 시작
+  if (ratio <= 0.50) return const Color(0xFF4D8FE8); // 소프트 블루 — 진행중
+  if (ratio <= 0.75) return const Color(0xFF7BB8F0); // 라이트 블루 — 잘 버티는 중
   return const Color(0xFFFBBF24);                    // 골드 — 거의 완료
 }
 
@@ -32,20 +30,20 @@ class WishItemCard extends ConsumerWidget {
         ? AppColors.green.withValues(alpha: context.isDark ? 0.12 : 0.08)
         : colors.surface;
 
-    return GestureDetector(
-      onLongPress: () => _showDeleteDialog(context, ref),
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: expired
-                ? AppColors.green.withValues(alpha: 0.4)
-                : colors.border,
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: expired
+                  ? AppColors.green.withValues(alpha: 0.4)
+                  : colors.border,
+            ),
           ),
-        ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
+          padding: const EdgeInsets.all(16),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
@@ -72,6 +70,27 @@ class WishItemCard extends ConsumerWidget {
                             fontSize: 13,
                             color: colors.textSecondary,
                           ),
+                        ),
+                      ],
+                      if (item.reason != null) ...[
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Icon(Icons.chat_bubble_outline_rounded, size: 11, color: colors.textTertiary),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                item.reason!,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colors.textTertiary,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                       const SizedBox(height: 12),
@@ -148,7 +167,25 @@ class WishItemCard extends ConsumerWidget {
             ],
           ],
         ),
-      ),
+        ),
+        // 오른쪽 상단 삭제 버튼
+        Positioned(
+          top: 8,
+          right: 8,
+          child: GestureDetector(
+            onTap: () => _showDeleteDialog(context, ref),
+            child: Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.remove_rounded, size: 15, color: AppColors.red),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -160,18 +197,18 @@ class WishItemCard extends ConsumerWidget {
         backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
-          '항목 삭제',
+          item.name,
           style: TextStyle(color: colors.textPrimary, fontSize: 16),
         ),
         content: Text(
-          '"${item.name}"을(를) 삭제할까요?',
+          '참기를 중지할까요?',
           style: TextStyle(color: colors.textSecondary, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
-              '취소',
+              '계속참기',
               style: TextStyle(color: colors.textSecondary),
             ),
           ),
@@ -181,7 +218,7 @@ class WishItemCard extends ConsumerWidget {
               Navigator.of(ctx).pop();
             },
             child: const Text(
-              '삭제',
+              '중지',
               style: TextStyle(color: AppColors.red),
             ),
           ),
@@ -190,6 +227,23 @@ class WishItemCard extends ConsumerWidget {
     );
   }
 }
+
+// 파스텔 색상 목록 (흐르는 그라데이션용)
+const _pastelColors = [
+  Color(0xFFFFB3C6), // 핑크
+  Color(0xFFCFB3FF), // 라벤더
+  Color(0xFFB3D4FF), // 스카이 블루
+  Color(0xFFB3FFE0), // 민트
+  Color(0xFFFFE0B3), // 피치
+  Color(0xFFFFB3C6), // 핑크 (반복 — 루프용)
+];
+
+const _pastelExpired = [
+  Color(0xFFB3FFCE), // 민트
+  Color(0xFFB3FFE8), // 라이트 민트
+  Color(0xFFB3F5FF), // 시안
+  Color(0xFFB3FFCE), // 민트 (루프)
+];
 
 class _GradientProgressBar extends StatefulWidget {
   const _GradientProgressBar({
@@ -215,7 +269,7 @@ class _GradientProgressBarState extends State<_GradientProgressBar>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 4),
     )..repeat();
   }
 
@@ -227,37 +281,34 @@ class _GradientProgressBarState extends State<_GradientProgressBar>
 
   @override
   Widget build(BuildContext context) {
-    final stageColor =
-        widget.expired ? AppColors.green : _progressColor(widget.value);
-
     return AnimatedBuilder(
       animation: _controller,
-      builder: (context, _) {
+      builder: (context, child) {
         return CustomPaint(
-          painter: _WaveProgressPainter(
+          painter: _PastelFlowPainter(
             value: widget.value,
             phase: _controller.value,
-            stageColor: stageColor,
+            expired: widget.expired,
             borderColor: widget.borderColor,
           ),
-          child: const SizedBox(height: 12, width: double.infinity),
+          child: const SizedBox(height: 8, width: double.infinity),
         );
       },
     );
   }
 }
 
-class _WaveProgressPainter extends CustomPainter {
-  _WaveProgressPainter({
+class _PastelFlowPainter extends CustomPainter {
+  _PastelFlowPainter({
     required this.value,
     required this.phase,
-    required this.stageColor,
+    required this.expired,
     required this.borderColor,
   });
 
   final double value;
   final double phase;
-  final Color stageColor;
+  final bool expired;
   final Color borderColor;
 
   @override
@@ -265,9 +316,9 @@ class _WaveProgressPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final filledW = (w * value).clamp(0.0, w);
-    const radius = Radius.circular(6);
+    const radius = Radius.circular(4);
 
-    // 배경
+    // 배경 트랙
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, w, h), radius),
       Paint()..color = borderColor,
@@ -275,77 +326,40 @@ class _WaveProgressPainter extends CustomPainter {
 
     if (filledW <= 0) return;
 
-    // 채워진 영역으로 클리핑
+    // 파스텔 흐름 — 그라데이션 폭을 3배로 키우고 phase로 슬라이드
+    final colors = expired ? _pastelExpired : _pastelColors;
+    final gradW = w * 3;
+    final offset = -gradW * phase;
+
     canvas.save();
     canvas.clipRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, filledW, h), radius),
     );
 
-    // 그라데이션 베이스
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, filledW, h), radius),
+    canvas.drawRect(
+      Rect.fromLTWH(offset, 0, gradW, h),
       Paint()
         ..shader = LinearGradient(
-          colors: [
-            stageColor.withValues(alpha: 0.45),
-            stageColor.withValues(alpha: 0.75),
-          ],
-        ).createShader(Rect.fromLTWH(0, 0, filledW, h)),
+          colors: colors,
+          stops: List.generate(
+            colors.length,
+            (i) => i / (colors.length - 1),
+          ),
+        ).createShader(Rect.fromLTWH(offset, 0, gradW, h)),
     );
-
-    // 물결 레이어 (두 파형을 겹쳐서 자연스럽게)
-    _drawWave(canvas, size, filledW, phase, stageColor.withValues(alpha: 0.35));
-    _drawWave(canvas, size, filledW, phase + 0.5, stageColor.withValues(alpha: 0.2));
 
     // 상단 하이라이트
     canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(0, 0, filledW, h * 0.4),
-        radius,
-      ),
-      Paint()..color = Colors.white.withValues(alpha: 0.12),
+      RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, filledW, h * 0.45), radius),
+      Paint()..color = Colors.white.withValues(alpha: 0.3),
     );
 
     canvas.restore();
-
-    // 글로우
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, filledW, h), radius),
-      Paint()
-        ..color = stageColor.withValues(alpha: 0.0)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
-  }
-
-  void _drawWave(
-    Canvas canvas,
-    Size size,
-    double filledW,
-    double phase,
-    Color color,
-  ) {
-    final h = size.height;
-    final amplitude = h * 0.35;
-    final waveLen = filledW * 0.7;
-    final midY = h * 0.52;
-
-    final path = Path()..moveTo(0, h);
-    for (double x = 0; x <= filledW; x++) {
-      final y = midY + sin((x / waveLen * 2 * pi) + (phase * 2 * pi)) * amplitude;
-      path.lineTo(x, y);
-    }
-    path
-      ..lineTo(filledW, h)
-      ..close();
-
-    canvas.drawPath(path, Paint()..color = color);
   }
 
   @override
-  bool shouldRepaint(_WaveProgressPainter old) =>
-      old.phase != phase ||
-      old.value != value ||
-      old.stageColor != stageColor;
+  bool shouldRepaint(_PastelFlowPainter old) =>
+      old.phase != phase || old.value != value || old.expired != expired;
 }
 
 class _CircularTimer extends StatelessWidget {
@@ -375,9 +389,7 @@ class _CircularTimer extends StatelessWidget {
           CircularProgressIndicator(
             value: 1.0,
             strokeWidth: 5,
-            valueColor: AlwaysStoppedAnimation(
-              colors.border,
-            ),
+            valueColor: AlwaysStoppedAnimation(colors.border),
           ),
           // 진행 링
           CircularProgressIndicator(

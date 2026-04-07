@@ -30,6 +30,16 @@ dependencies:
   # Local Storage
   shared_preferences: ^2.3.3
 
+  # Ads
+  google_mobile_ads: ^5.3.0
+
+  # Social Login
+  flutter_naver_login: ^1.8.0
+  kakao_flutter_sdk_user: ^1.9.0
+
+  # Network
+  http: ^1.2.2
+
   # Utilities
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../../../../core/ads/ad_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../../features/my/presentation/providers/nickname_provider.dart';
 import '../../data/repositories/community_repository_impl.dart';
 import '../../domain/models/community_post.dart';
 import '../providers/community_provider.dart';
@@ -58,6 +61,64 @@ class ExplorePage extends ConsumerStatefulWidget {
 
 class _ExplorePageState extends ConsumerState<ExplorePage> {
   _PostFilter _filter = _PostFilter.all;
+  BannerAd? _bannerAd;
+  bool _isBannerLoaded = false;
+  NativeAd? _nativeAd;
+  bool _isNativeAdLoaded = false;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBannerAd();
+    _loadNativeAd();
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim());
+    });
+  }
+
+  void _loadBannerAd() {
+    _bannerAd = BannerAd(
+      adUnitId: AdConfig.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) => setState(() => _isBannerLoaded = true),
+        onAdFailedToLoad: (ad, _) => ad.dispose(),
+      ),
+    )..load();
+  }
+
+  void _loadNativeAd() {
+    _nativeAd = NativeAd(
+      adUnitId: AdConfig.nativeAdUnitId,
+      request: const AdRequest(),
+      nativeTemplateStyle: NativeTemplateStyle(templateType: TemplateType.medium),
+      listener: NativeAdListener(
+        onAdLoaded: (_) => setState(() => _isNativeAdLoaded = true),
+        onAdFailedToLoad: (ad, _) => ad.dispose(),
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    _nativeAd?.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  // 게시글 5개마다 광고 슬롯(null) 삽입
+  List<CommunityPost?> _buildMixedList(List<CommunityPost> posts) {
+    final List<CommunityPost?> mixed = [];
+    for (int i = 0; i < posts.length; i++) {
+      mixed.add(posts[i]);
+      if ((i + 1) % 5 == 0 && _isNativeAdLoaded) mixed.add(null);
+    }
+    return mixed;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,20 +128,18 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
 
     return Scaffold(
       backgroundColor: colors.background,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const _WritePostPage()),
-        ),
-        backgroundColor: AppColors.accent,
-        child: const Icon(Icons.edit_rounded, color: Colors.white, size: 22),
-      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 16),
+            if (_isBannerLoaded)
+              SizedBox(
+                width: double.infinity,
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
+            _SearchBar(controller: _searchController),
             _FilterRow(selected: _filter, onChanged: (f) => setState(() => _filter = f)),
-            const SizedBox(height: 4),
             Expanded(
               child: postsAsync.when(
                 loading: () => const Center(
@@ -90,13 +149,20 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                   child: Text('불러오기 실패', style: TextStyle(color: context.colors.textSecondary)),
                 ),
                 data: (posts) {
-                  final filtered = _filter == _PostFilter.all
+                  var filtered = _filter == _PostFilter.all
                       ? posts
                       : posts.where((p) {
                           return _filter == _PostFilter.review
                               ? p.type == PostType.review
                               : p.type == PostType.tip;
                         }).toList();
+                  if (_searchQuery.isNotEmpty) {
+                    final q = _searchQuery.toLowerCase();
+                    filtered = filtered
+                        .where((p) =>
+                            p.content.toLowerCase().contains(q))
+                        .toList();
+                  }
 
                   if (filtered.isEmpty) {
                     return Center(
@@ -108,22 +174,157 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     );
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 80),
-                    itemCount: filtered.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 12),
-                    itemBuilder: (_, i) => _PostCard(
-                      post: filtered[i],
-                      currentUid: currentUid,
-                      onLike: currentUid == null
-                          ? null
-                          : () => ref
-                              .read(communityRepositoryProvider)
-                              .toggleLike(filtered[i].id, currentUid),
-                    ),
+                  final mixedItems = _buildMixedList(filtered);
+                  return ListView.builder(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
+                    itemCount: mixedItems.length,
+                    itemBuilder: (_, i) {
+                      final item = mixedItems[i];
+                      if (item == null) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SizedBox(
+                            height: 320,
+                            child: AdWidget(ad: _nativeAd!),
+                          ),
+                        );
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _PostCard(
+                          post: item,
+                          currentUid: currentUid,
+                          onLike: currentUid == null
+                              ? null
+                              : () => ref
+                                  .read(communityRepositoryProvider)
+                                  .toggleLike(item.id, currentUid),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
+            ),
+            _WriteButton(
+              onTap: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => const _WritePostSheet(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WriteButton extends StatelessWidget {
+  const _WriteButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+            ),
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.accent.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.edit_rounded, size: 15, color: Colors.white),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                '나눔 글쓰기',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchBar extends StatelessWidget {
+  const _SearchBar({required this.controller});
+  final TextEditingController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: colors.border),
+        ),
+        child: Row(
+          children: [
+            const SizedBox(width: 12),
+            Icon(Icons.search_rounded, size: 18, color: colors.textTertiary),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                controller: controller,
+                style: TextStyle(fontSize: 14, color: colors.textPrimary),
+                decoration: InputDecoration(
+                  hintText: '내용 검색',
+                  hintStyle: TextStyle(fontSize: 14, color: colors.textTertiary),
+                  border: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+                textInputAction: TextInputAction.search,
+              ),
+            ),
+            ValueListenableBuilder<TextEditingValue>(
+              valueListenable: controller,
+              builder: (context, value, child) {
+                if (value.text.isEmpty) return const SizedBox.shrink();
+                return GestureDetector(
+                  onTap: () => controller.clear(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Icon(Icons.close_rounded, size: 16, color: colors.textTertiary),
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -140,36 +341,50 @@ class _FilterRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final items = [
-      (_PostFilter.all,    '전체'),
-      (_PostFilter.review, '후기'),
-      (_PostFilter.tip,    '팁'),
+    final items = <({_PostFilter filter, String label, IconData icon, Color color})>[
+      (filter: _PostFilter.all,    label: '전체', icon: Icons.grid_view_rounded,         color: const Color(0xFF6B7280)),
+      (filter: _PostFilter.review, label: '후기', icon: Icons.rate_review_outlined,      color: AppColors.green),
+      (filter: _PostFilter.tip,    label: '팁',   icon: Icons.lightbulb_outline_rounded, color: AppColors.accent),
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: items.map((e) {
-          final isSelected = selected == e.$1;
-          return GestureDetector(
-            onTap: () => onChanged(e.$1),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: isSelected ? AppColors.accent : colors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isSelected ? AppColors.accent : colors.border,
+          final isSelected = selected == e.filter;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(e.filter),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: isSelected ? e.color : colors.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(
+                    color: isSelected ? e.color : colors.border,
+                    width: isSelected ? 0 : 1,
+                  ),
+                  boxShadow: isSelected
+                      ? [BoxShadow(color: e.color.withValues(alpha: 0.35), blurRadius: 10, offset: const Offset(0, 3))]
+                      : null,
                 ),
-              ),
-              child: Text(
-                e.$2,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                  color: isSelected ? Colors.white : colors.textSecondary,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(e.icon, size: 15, color: isSelected ? Colors.white : colors.textSecondary),
+                    const SizedBox(height: 3),
+                    Text(
+                      e.label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: isSelected ? FontWeight.w700 : FontWeight.w400,
+                        color: isSelected ? Colors.white : colors.textSecondary,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -180,7 +395,7 @@ class _FilterRow extends StatelessWidget {
   }
 }
 
-class _PostCard extends StatelessWidget {
+class _PostCard extends ConsumerWidget {
   const _PostCard({
     required this.post,
     required this.currentUid,
@@ -203,11 +418,15 @@ class _PostCard extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final colors = context.colors;
     final isReview = post.type == PostType.review;
     final isLiked = currentUid != null && post.isLikedBy(currentUid!);
     final avatarColor = _avatarColor(post.uid);
+    final nicknameAsync = ref.watch(authorNicknameProvider(post.uid));
+    final displayNickname = nicknameAsync.valueOrNull?.isNotEmpty == true
+        ? nicknameAsync.value!
+        : post.nickname;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -230,7 +449,7 @@ class _PostCard extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    post.nickname.isNotEmpty ? post.nickname[0] : '?',
+                    displayNickname.isNotEmpty ? displayNickname[0] : '?',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -245,7 +464,7 @@ class _PostCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      post.nickname,
+                      displayNickname,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -335,16 +554,16 @@ class _PostCard extends StatelessWidget {
   }
 }
 
-// ── 글쓰기 페이지 ─────────────────────────────────────────
+// ── 글쓰기 바텀시트 ───────────────────────────────────────
 
-class _WritePostPage extends ConsumerStatefulWidget {
-  const _WritePostPage();
+class _WritePostSheet extends ConsumerStatefulWidget {
+  const _WritePostSheet();
 
   @override
-  ConsumerState<_WritePostPage> createState() => _WritePostPageState();
+  ConsumerState<_WritePostSheet> createState() => _WritePostSheetState();
 }
 
-class _WritePostPageState extends ConsumerState<_WritePostPage> {
+class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
   PostType _type = PostType.review;
   final _itemController = TextEditingController();
   final _contentController = TextEditingController();
@@ -371,10 +590,11 @@ class _WritePostPageState extends ConsumerState<_WritePostPage> {
 
     setState(() => _isSubmitting = true);
     try {
+      final nicknameState = ref.read(nicknameNotifierProvider);
       final post = CommunityPost(
         id: '',
         uid: user.uid,
-        nickname: user.displayName ?? '익명',
+        nickname: nicknameState.nickname.isNotEmpty ? nicknameState.nickname : (user.displayName ?? '익명'),
         type: _type,
         content: _contentController.text.trim(),
         createdAt: DateTime.now(),
@@ -400,115 +620,188 @@ class _WritePostPageState extends ConsumerState<_WritePostPage> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
-    return Scaffold(
-      backgroundColor: colors.background,
-      appBar: AppBar(
-        backgroundColor: colors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.close_rounded, size: 22, color: colors.textPrimary),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          '나눔 글쓰기',
-          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: colors.textPrimary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _canSubmit ? _submit : null,
-            child: _isSubmitting
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
-                  )
-                : Text(
-                    '등록',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: _canSubmit ? AppColors.accent : colors.inactive,
-                    ),
-                  ),
-          ),
-        ],
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Label('유형', colors: colors),
-              const SizedBox(height: 8),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 16,
+        bottom: bottomInset + 32,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 드래그 핸들
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              '어떤 이야기를 나눌까요?',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            // 유형 선택
+            Row(
+              children: [
+                _TypeChip(
+                  label: '후기',
+                  icon: Icons.rate_review_outlined,
+                  selected: _type == PostType.review,
+                  color: AppColors.green,
+                  onTap: () => setState(() => _type = PostType.review),
+                ),
+                const SizedBox(width: 10),
+                _TypeChip(
+                  label: '팁',
+                  icon: Icons.lightbulb_outline_rounded,
+                  selected: _type == PostType.tip,
+                  color: AppColors.accent,
+                  onTap: () => setState(() => _type = PostType.tip),
+                ),
+              ],
+            ),
+            if (_type == PostType.review) ...[
+              const SizedBox(height: 16),
+              _SheetField(
+                controller: _itemController,
+                hint: '참기 아이템 이름 (선택)',
+                colors: colors,
+              ),
+              const SizedBox(height: 12),
               Row(
                 children: [
                   _TypeChip(
-                    label: '후기',
-                    icon: Icons.rate_review_outlined,
-                    selected: _type == PostType.review,
-                    color: AppColors.green,
-                    onTap: () => setState(() => _type = PostType.review),
+                    label: '참았어요',
+                    icon: Icons.self_improvement_rounded,
+                    selected: _resisted,
+                    color: AppColors.blue,
+                    onTap: () => setState(() => _resisted = true),
                   ),
                   const SizedBox(width: 10),
                   _TypeChip(
-                    label: '팁',
-                    icon: Icons.lightbulb_outline_rounded,
-                    selected: _type == PostType.tip,
-                    color: AppColors.accent,
-                    onTap: () => setState(() => _type = PostType.tip),
+                    label: '샀어요',
+                    icon: Icons.shopping_bag_outlined,
+                    selected: !_resisted,
+                    color: AppColors.green,
+                    onTap: () => setState(() => _resisted = false),
                   ),
                 ],
               ),
-              if (_type == PostType.review) ...[
-                const SizedBox(height: 20),
-                _Label('참기 아이템 (선택)', colors: colors),
-                const SizedBox(height: 8),
-                _InputField(
-                  controller: _itemController,
-                  hint: '예) 에어팟 프로, 나이키 운동화',
-                  colors: colors,
-                ),
-                const SizedBox(height: 20),
-                _Label('72시간 후 결과', colors: colors),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    _TypeChip(
-                      label: '참았어요',
-                      icon: Icons.self_improvement_rounded,
-                      selected: _resisted,
-                      color: AppColors.blue,
-                      onTap: () => setState(() => _resisted = true),
-                    ),
-                    const SizedBox(width: 10),
-                    _TypeChip(
-                      label: '샀어요',
-                      icon: Icons.shopping_bag_outlined,
-                      selected: !_resisted,
-                      color: AppColors.green,
-                      onTap: () => setState(() => _resisted = false),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 20),
-              _Label('내용', colors: colors),
-              const SizedBox(height: 8),
-              _InputField(
-                controller: _contentController,
-                hint: _type == PostType.review
-                    ? '72시간 참기 후기를 자유롭게 남겨주세요.'
-                    : '소비 습관이나 절약에 도움이 된 팁을 공유해주세요.',
-                colors: colors,
-                maxLines: 6,
-                onChanged: (_) => setState(() {}),
-              ),
             ],
-          ),
+            const SizedBox(height: 12),
+            _SheetField(
+              controller: _contentController,
+              hint: _type == PostType.review
+                  ? '72시간 참기 후기를 자유롭게 남겨주세요.'
+                  : '소비 습관이나 절약에 도움이 된 팁을 공유해주세요.',
+              colors: colors,
+              maxLines: 4,
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: _canSubmit ? _submit : null,
+              child: AnimatedOpacity(
+                opacity: _canSubmit ? 1.0 : 0.5,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  height: 52,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            '나눔 등록',
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _SheetField extends StatelessWidget {
+  const _SheetField({
+    required this.controller,
+    required this.hint,
+    required this.colors,
+    this.maxLines = 1,
+    this.onChanged,
+  });
+  final TextEditingController controller;
+  final String hint;
+  final AppColors colors;
+  final int maxLines;
+  final ValueChanged<String>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: controller,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      style: TextStyle(color: colors.textPrimary, fontSize: 15),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: colors.inactive),
+        filled: true,
+        fillColor: colors.background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
     );
   }
@@ -517,7 +810,7 @@ class _WritePostPageState extends ConsumerState<_WritePostPage> {
 // ── 배움 섹션 위젯 ────────────────────────────────────────
 
 const _quote = (
-  text: '지금 살 여유가 없는 것을 나중에도 살 여유가 없다.\n하지만 지금 참을 수 있다면 나중엔 더 잘 살 수 있다.',
+  text: '지금 살 여유가 없는 것은 나중에도 살 여유가 없다.\n하지만 지금 참을 수 있다면 나중엔 더 잘 살 수 있다.',
   author: '— 미니멀리즘 격언',
 );
 
@@ -672,20 +965,6 @@ class _TipCard extends StatelessWidget {
   }
 }
 
-class _Label extends StatelessWidget {
-  const _Label(this.text, {required this.colors});
-  final String text;
-  final AppColors colors;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colors.textSecondary),
-    );
-  }
-}
-
 class _TypeChip extends StatelessWidget {
   const _TypeChip({
     required this.label,
@@ -736,40 +1015,3 @@ class _TypeChip extends StatelessWidget {
   }
 }
 
-class _InputField extends StatelessWidget {
-  const _InputField({
-    required this.controller,
-    required this.hint,
-    required this.colors,
-    this.maxLines = 1,
-    this.onChanged,
-  });
-  final TextEditingController controller;
-  final String hint;
-  final AppColors colors;
-  final int maxLines;
-  final ValueChanged<String>? onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colors.border),
-      ),
-      child: TextField(
-        controller: controller,
-        maxLines: maxLines,
-        onChanged: onChanged,
-        style: TextStyle(fontSize: 14, color: colors.textPrimary),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: TextStyle(fontSize: 14, color: colors.textTertiary),
-          contentPadding: const EdgeInsets.all(14),
-          border: InputBorder.none,
-        ),
-      ),
-    );
-  }
-}
