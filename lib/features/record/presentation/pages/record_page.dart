@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import '../../../../core/ads/ad_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/home/domain/models/wish_item_model.dart';
 import '../../../../features/home/domain/models/wish_item_status.dart';
@@ -15,6 +17,28 @@ class RecordPage extends ConsumerStatefulWidget {
 
 class _RecordPageState extends ConsumerState<RecordPage> {
   _Filter _filter = _Filter.all;
+  BannerAd? _bannerAd;
+  bool _isBannerLoaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _bannerAd = BannerAd(
+      adUnitId: AdConfig.bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (_) => setState(() => _isBannerLoaded = true),
+        onAdFailedToLoad: (ad, _) => ad.dispose(),
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,6 +52,12 @@ class _RecordPageState extends ConsumerState<RecordPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (_isBannerLoaded)
+              SizedBox(
+                width: double.infinity,
+                height: _bannerAd!.size.height.toDouble(),
+                child: AdWidget(ad: _bannerAd!),
+              ),
             _FilterChips(
               selected: _filter,
               onChanged: (f) => setState(() => _filter = f),
@@ -37,7 +67,7 @@ class _RecordPageState extends ConsumerState<RecordPage> {
               child: filtered.isEmpty
                   ? _EmptyHistory(colors: colors)
                   : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
                       itemCount: filtered.length,
                       itemBuilder: (_, i) => Padding(
                         padding: const EdgeInsets.only(bottom: 12),
@@ -96,7 +126,7 @@ class _FilterChips extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final filters = <({_Filter filter, String label, IconData icon, Color color})>[
-      (filter: _Filter.all,      label: '전체', icon: Icons.grid_view_rounded,        color: colors.textPrimary),
+      (filter: _Filter.all,      label: '전체', icon: Icons.grid_view_rounded,        color: const Color(0xFF6B7280)),
       (filter: _Filter.resisted, label: '참음', icon: Icons.self_improvement_rounded, color: AppColors.blue),
       (filter: _Filter.purchased,label: '구매', icon: Icons.shopping_bag_outlined,    color: AppColors.green),
     ];
@@ -139,7 +169,7 @@ class _FilterChips extends StatelessWidget {
                     Icon(
                       entry.icon,
                       size: 15,
-                      color: isSelected ? Colors.white : colors.textTertiary,
+                      color: isSelected ? Colors.white : colors.textSecondary,
                     ),
                     const SizedBox(height: 3),
                     Text(

@@ -8,6 +8,19 @@ service cloud.firestore {
       allow delete: if request.auth != null && request.auth.uid == resource.data.uid;
     }
 
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    match /nicknames/{nickname} {
+      // 인증된 사용자는 중복 확인을 위해 읽기 가능
+      allow read: if request.auth != null;
+      // 본인 uid로만 등록 가능
+      allow create: if request.auth != null && request.resource.data.uid == request.auth.uid;
+      // 본인이 등록한 닉네임만 삭제 가능
+      allow delete: if request.auth != null && resource.data.uid == request.auth.uid;
+    }
+
     match /users/{uid}/wishItems/{itemId} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
     }

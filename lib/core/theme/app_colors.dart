@@ -30,40 +30,40 @@ class AppColors {
   final Color inactive;
 
   // 테마 무관 공통 색상
-  static const Color accent = Color(0xFF8B7CF6);
-  static const Color green = Color(0xFF4ADE80);
+  static const Color accent = Color(0xFF4D8FE8);   // 소프트 블루
+  static const Color green = Color(0xFF34C78A);
   static const Color yellow = Color(0xFFFBBF24);
   static const Color red = Color(0xFFEF4444);
-  static const Color blue = Color(0xFF60A5FA);
+  static const Color blue = Color(0xFF7BB8F0);
 
   static const AppColors dark = AppColors._(
-    background: Color(0xFF0F0F0F),
-    surface: Color(0xFF1A1A1A),
-    surface2: Color(0xFF141414),
-    surfaceHighlight: Color(0xFF222222),
-    gradStart: Color(0xFF1E1A2E),
-    gradEnd: Color(0xFF16133A),
-    border: Color(0xFF2A2A2A),
-    borderLight: Color(0xFF222222),
-    textPrimary: Color(0xFFE8E8E8),
-    textSecondary: Color(0xFF888888),
-    textTertiary: Color(0xFF555555),
-    inactive: Color(0xFF444444),
+    background: Color(0xFF0B0D14),   // 거의 블랙 + 블루 틴트
+    surface: Color(0xFF141820),      // 카드/서피스
+    surface2: Color(0xFF0F1118),
+    surfaceHighlight: Color(0xFF1E2433), // 버튼/하이라이트
+    gradStart: Color(0xFF111828),
+    gradEnd: Color(0xFF0B1020),
+    border: Color(0xFF252C3E),       // 선명한 구분선
+    borderLight: Color(0xFF1C2230),
+    textPrimary: Color(0xFFF0F4FF),  // 밝은 화이트
+    textSecondary: Color(0xFF8898B5), // 중간 블루그레이
+    textTertiary: Color(0xFF4E5E7A), // 어두운 블루그레이
+    inactive: Color(0xFF2E3848),
   );
 
   static const AppColors light = AppColors._(
-    background: Color(0xFFF5F5F7),
+    background: Color(0xFFF0F4FB),   // 라이트 블루 그레이
     surface: Color(0xFFFFFFFF),
-    surface2: Color(0xFFEFEFF4),
-    surfaceHighlight: Color(0xFFE8E8F0),
-    gradStart: Color(0xFFEEE8FF),
-    gradEnd: Color(0xFFE0D8FF),
-    border: Color(0xFFDDDDDD),
-    borderLight: Color(0xFFEAEAEA),
-    textPrimary: Color(0xFF1A1A1A),
-    textSecondary: Color(0xFF666666),
-    textTertiary: Color(0xFF999999),
-    inactive: Color(0xFFBBBBBB),
+    surface2: Color(0xFFE6EDF8),
+    surfaceHighlight: Color(0xFFD8E4F4),
+    gradStart: Color(0xFFDEEAFB),
+    gradEnd: Color(0xFFC8DAEF),
+    border: Color(0xFFCAD7EC),
+    borderLight: Color(0xFFDDE6F4),
+    textPrimary: Color(0xFF1A2535),
+    textSecondary: Color(0xFF4A6080),
+    textTertiary: Color(0xFF8099B8),
+    inactive: Color(0xFFAABECE),
   );
 }
 

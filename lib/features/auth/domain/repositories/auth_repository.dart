@@ -5,5 +5,7 @@ abstract class AuthRepository {
   UserModel? get currentUser;
 
   Future<UserModel> signInWithGoogle();
+  Future<UserModel> signInWithNaver();
+  Future<UserModel> signInWithKakao();
   Future<void> signOut();
 }
