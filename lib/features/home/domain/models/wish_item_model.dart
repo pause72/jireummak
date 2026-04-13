@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import 'wish_item_status.dart';
 
 part 'wish_item_model.freezed.dart';
@@ -39,12 +40,12 @@ extension WishItemX on WishItem {
   }
 
   String get remainingText {
-    if (isExpired) return '72시간 완료 — 결정할 시간!';
+    if (isExpired) return AppStrings.wishExpiredText;
     final d = remainingDuration;
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
-    if (h > 0) return '$h시간 $m분 남음';
-    return '$m분 남음';
+    if (h > 0) return AppStrings.wishRemainingHours(h, m);
+    return AppStrings.wishRemainingMinutes(m);
   }
 
   String get formattedPrice {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerWidget {
@@ -44,27 +45,27 @@ class LoginPage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               const Text(
-                '지름막',
+                AppStrings.appName,
                 style: TextStyle(
                   fontSize: 36,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFE8E8E8),
+                  color: Colors.white,
                   letterSpacing: 4,
                 ),
               ),
               const SizedBox(height: 12),
               const Text(
-                '충동구매를 막는 72시간의 습관',
+                AppStrings.appTagline,
                 style: TextStyle(
                   fontSize: 13,
-                  color: Color(0xFF666666),
+                  color: Colors.white60,
                   letterSpacing: 0.5,
                 ),
               ),
               const Spacer(flex: 3),
               // 로그인 버튼 영역
               const Text(
-                'SNS 계정으로 계속하기',
+                AppStrings.loginContinueWith,
                 style: TextStyle(
                   fontSize: 12,
                   color: Color(0xFF555555),
@@ -79,12 +80,6 @@ class LoginPage extends ConsumerWidget {
                     isLoading: isLoading,
                     onPressed: () =>
                         ref.read(authNotifierProvider.notifier).signInWithGoogle(),
-                  ),
-                  const SizedBox(width: 20),
-                  _SocialIconButton.naver(
-                    isLoading: isLoading,
-                    onPressed: () =>
-                        ref.read(authNotifierProvider.notifier).signInWithNaver(),
                   ),
                   const SizedBox(width: 20),
                   _SocialIconButton.kakao(
@@ -107,14 +102,13 @@ class LoginPage extends ConsumerWidget {
 // 아이콘 전용 소셜 로그인 버튼
 // ─────────────────────────────────────────────
 
-enum _SocialProvider { google, naver, kakao }
+enum _SocialProvider { google, kakao }
 
 class _SocialIconButton extends StatelessWidget {
   const _SocialIconButton({
     required this.provider,
     required this.onPressed,
     required this.isLoading,
-    this.disabled = false,
   });
 
   factory _SocialIconButton.google({
@@ -126,42 +120,26 @@ class _SocialIconButton extends StatelessWidget {
           onPressed: onPressed,
           isLoading: isLoading);
 
-  factory _SocialIconButton.naver({
-    required VoidCallback onPressed,
-    required bool isLoading,
-    bool disabled = false,
-  }) =>
-      _SocialIconButton(
-          provider: _SocialProvider.naver,
-          onPressed: onPressed,
-          isLoading: isLoading,
-          disabled: disabled);
-
   factory _SocialIconButton.kakao({
     required VoidCallback onPressed,
     required bool isLoading,
-    bool disabled = false,
   }) =>
       _SocialIconButton(
           provider: _SocialProvider.kakao,
           onPressed: onPressed,
-          isLoading: isLoading,
-          disabled: disabled);
+          isLoading: isLoading);
 
   final _SocialProvider provider;
   final VoidCallback onPressed;
   final bool isLoading;
-  final bool disabled;
 
   Color get _bgColor => switch (provider) {
         _SocialProvider.google => const Color(0xFF1A1A1A),
-        _SocialProvider.naver => const Color(0xFF03C75A),
         _SocialProvider.kakao => const Color(0xFFFEE500),
       };
 
   Color get _borderColor => switch (provider) {
         _SocialProvider.google => const Color(0xFF2E2E2E),
-        _SocialProvider.naver => const Color(0xFF03C75A),
         _SocialProvider.kakao => const Color(0xFFFEE500),
       };
 
@@ -171,17 +149,14 @@ class _SocialIconButton extends StatelessWidget {
             height: 22,
             child: CustomPaint(painter: _GoogleLogoPainter()),
           ),
-        _SocialProvider.naver => const _NaverLogo(),
         _SocialProvider.kakao => const _KakaoLogo(),
       };
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: (isLoading || disabled) ? null : onPressed,
-      child: Opacity(
-        opacity: disabled ? 0.35 : 1.0,
-        child: Container(
+      onTap: isLoading ? null : onPressed,
+      child: Container(
         width: 60,
         height: 60,
         decoration: BoxDecoration(
@@ -201,7 +176,6 @@ class _SocialIconButton extends StatelessWidget {
                 )
               : _icon,
         ),
-      ),
       ),
     );
   }
@@ -237,23 +211,6 @@ class _GoogleLogoPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _NaverLogo extends StatelessWidget {
-  const _NaverLogo();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Text(
-      'N',
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 20,
-        fontWeight: FontWeight.w900,
-        height: 1,
-      ),
-    );
-  }
 }
 
 class _KakaoLogo extends StatelessWidget {

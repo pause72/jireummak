@@ -265,7 +265,7 @@ class _MotivationCard extends StatelessWidget {
 
   (String, String) _getMessage(WishStats s) {
     if (s.totalCount == 0) {
-      return ('아직 기록이 없어요.', '갖고 싶은 게 생기면 + 버튼으로 72시간 테스트를 시작해보세요.');
+      return ('아직 기록이 없어요.', '갖고 싶은 게 생기면 글쓰기 버튼으로 72시간 참기를 시작해보세요.');
     }
     if (s.cancelledCount == 0) {
       return ('아직 취소한 항목이 없어요.', '72시간이 지나면 진짜 필요한지 다시 생각해보세요.');

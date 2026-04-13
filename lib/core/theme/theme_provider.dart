@@ -21,18 +21,23 @@ class ThemeNotifier extends _$ThemeNotifier {
   ThemeMode build() {
     final prefs = ref.watch(sharedPreferencesProvider).valueOrNull;
     final stored = prefs?.getString(_kThemeKey);
+    if (stored == null || stored == 'system') return ThemeMode.system;
     return stored == _dark ? ThemeMode.dark : ThemeMode.light;
   }
 
+  static const _system = 'system';
+
   void setDark() => _set(ThemeMode.dark);
   void setLight() => _set(ThemeMode.light);
-  void toggle() => state == ThemeMode.dark ? setLight() : setDark();
+  void setSystem() => _set(ThemeMode.system);
 
   void _set(ThemeMode mode) {
     state = mode;
-    ref
-        .read(sharedPreferencesProvider)
-        .valueOrNull
-        ?.setString(_kThemeKey, mode == ThemeMode.dark ? _dark : _light);
+    final value = switch (mode) {
+      ThemeMode.dark => _dark,
+      ThemeMode.light => _light,
+      ThemeMode.system => _system,
+    };
+    ref.read(sharedPreferencesProvider).valueOrNull?.setString(_kThemeKey, value);
   }
 }
