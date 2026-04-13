@@ -1,26 +1,30 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'nickname_provider.dart';
+part of 'savings_goal_provider.dart';
 
 // **************************************************************************
 // RiverpodGenerator
 // **************************************************************************
 
-String _$nicknameNotifierHash() => r'c1f993fa473f8d0a398faf75b257d2e356d89425';
+String _$savingsGoalNotifierHash() =>
+    r'45581f8162d34f9021aed72c30b95241305db9eb';
 
-/// See also [NicknameNotifier].
-@ProviderFor(NicknameNotifier)
-final nicknameNotifierProvider =
-    AutoDisposeNotifierProvider<NicknameNotifier, NicknameState>.internal(
-      NicknameNotifier.new,
-      name: r'nicknameNotifierProvider',
+/// See also [SavingsGoalNotifier].
+@ProviderFor(SavingsGoalNotifier)
+final savingsGoalNotifierProvider =
+    AutoDisposeNotifierProvider<
+      SavingsGoalNotifier,
+      List<SavingsGoal>
+    >.internal(
+      SavingsGoalNotifier.new,
+      name: r'savingsGoalNotifierProvider',
       debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
           ? null
-          : _$nicknameNotifierHash,
+          : _$savingsGoalNotifierHash,
       dependencies: null,
       allTransitiveDependencies: null,
     );
 
-typedef _$NicknameNotifier = AutoDisposeNotifier<NicknameState>;
+typedef _$SavingsGoalNotifier = AutoDisposeNotifier<List<SavingsGoal>>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package

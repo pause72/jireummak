@@ -52,6 +52,7 @@ class ExploreContent extends StatelessWidget {
 // ── 커뮤니티 페이지 ──────────────────────────────────────
 
 enum _PostFilter { all, review, tip }
+enum _AdSlot { banner, native }
 
 class ExplorePage extends ConsumerStatefulWidget {
   const ExplorePage({super.key});
@@ -111,12 +112,16 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     super.dispose();
   }
 
-  // 게시글 5개마다 광고 슬롯(null) 삽입
-  List<CommunityPost?> _buildMixedList(List<CommunityPost> posts) {
-    final List<CommunityPost?> mixed = [];
+  // 배너: 2번째 카드 뒤, 네이티브: 이후 5개마다 삽입
+  List<Object> _buildMixedList(List<CommunityPost> posts) {
+    final List<Object> mixed = [];
     for (int i = 0; i < posts.length; i++) {
       mixed.add(posts[i]);
-      if ((i + 1) % 5 == 0 && _isNativeAdLoaded) mixed.add(null);
+      if (i == 1 && _isBannerLoaded) {
+        mixed.add(_AdSlot.banner);
+      } else if (i > 1 && (i + 1) % 5 == 0 && _isNativeAdLoaded) {
+        mixed.add(_AdSlot.native);
+      }
     }
     return mixed;
   }
@@ -141,12 +146,6 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (_isBannerLoaded)
-              SizedBox(
-                width: double.infinity,
-                height: _bannerAd!.size.height.toDouble(),
-                child: AdWidget(ad: _bannerAd!),
-              ),
             _FilterRow(selected: _filter, onChanged: (f) => setState(() => _filter = f)),
             _SearchBar(controller: _searchController),
             Expanded(
@@ -189,25 +188,33 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     itemCount: mixedItems.length,
                     itemBuilder: (_, i) {
                       final item = mixedItems[i];
-                      if (item == null) {
+                      if (item == _AdSlot.banner) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
                           child: SizedBox(
-                            height: 320,
-                            child: AdWidget(ad: _nativeAd!),
+                            width: double.infinity,
+                            height: _bannerAd!.size.height.toDouble(),
+                            child: AdWidget(ad: _bannerAd!),
                           ),
                         );
                       }
+                      if (item == _AdSlot.native) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: SizedBox(height: 320, child: AdWidget(ad: _nativeAd!)),
+                        );
+                      }
+                      final post = item as CommunityPost;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _PostCard(
-                          post: item,
+                          post: post,
                           currentUid: currentUid,
                           onLike: currentUid == null
                               ? null
                               : () => ref
                                   .read(communityRepositoryProvider)
-                                  .toggleLike(item.id, currentUid),
+                                  .toggleLike(post.id, currentUid),
                         ),
                       );
                     },
@@ -228,21 +235,27 @@ class _WriteFab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final fabColors = isDark
+        ? [AppColors.green, const Color(0xFF28A372)]
+        : [AppColors.accent, const Color(0xFF2D6FD4)];
+    final shadowColor = isDark ? AppColors.green : AppColors.accent;
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
+          gradient: LinearGradient(
+            colors: fabColors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(26),
           boxShadow: [
             BoxShadow(
-              color: AppColors.accent.withValues(alpha: 0.45),
+              color: shadowColor.withValues(alpha: 0.4),
               blurRadius: 16,
               offset: const Offset(0, 6),
             ),
@@ -283,7 +296,10 @@ class _SearchBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colors.border),
+          border: context.isDark ? null : Border.all(color: colors.border),
+          boxShadow: context.isDark
+              ? null
+              : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
         ),
         child: Row(
           children: [
@@ -333,9 +349,9 @@ class _FilterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final items = <({_PostFilter filter, String label, IconData icon, Color color})>[
-      (filter: _PostFilter.all,    label: AppStrings.exploreFilterAll, icon: Icons.grid_view_rounded,         color: const Color(0xFF6B7280)),
-      (filter: _PostFilter.review, label: AppStrings.exploreFilterReview, icon: Icons.rate_review_outlined,      color: AppColors.green),
-      (filter: _PostFilter.tip,    label: AppStrings.exploreFilterTip,   icon: Icons.lightbulb_outline_rounded, color: AppColors.accent),
+      (filter: _PostFilter.all,    label: AppStrings.exploreFilterAll,    icon: Icons.grid_view_rounded,         color: AppColors.accent),
+      (filter: _PostFilter.review, label: AppStrings.exploreFilterReview, icon: Icons.rate_review_outlined,      color: AppColors.yellow),
+      (filter: _PostFilter.tip,    label: AppStrings.exploreFilterTip,    icon: Icons.lightbulb_outline_rounded, color: AppColors.green),
     ];
 
     return Padding(
@@ -397,15 +413,15 @@ class _PostCard extends ConsumerWidget {
   final VoidCallback? onLike;
 
   Color _avatarColor(String uid) {
-    final colors = [
+    const palette = [
       AppColors.accent,
       AppColors.green,
       AppColors.blue,
       AppColors.yellow,
-      AppColors.red,
-      const Color(0xFF2DD4BF),
+      Color(0xFF2DD4BF), // teal
+      Color(0xFFA78BFA), // lavender
     ];
-    return colors[uid.codeUnits.fold(0, (a, b) => a + b) % colors.length];
+    return palette[uid.codeUnits.fold(0, (a, b) => a + b) % palette.length];
   }
 
   @override
@@ -485,8 +501,8 @@ class _PostCard extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
                     color: isReview
-                        ? AppColors.green.withValues(alpha: 0.12)
-                        : AppColors.accent.withValues(alpha: 0.12),
+                        ? AppColors.yellow.withValues(alpha: 0.15)
+                        : AppColors.green.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -494,7 +510,7 @@ class _PostCard extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
-                      color: isReview ? AppColors.green : AppColors.accent,
+                      color: isReview ? const Color(0xFFD97706) : AppColors.green,
                     ),
                   ),
                 ),

@@ -34,6 +34,19 @@ class AppStrings {
   static const homeItemNameRequired = '사고 싶은 물건을 입력해주세요';
   static const homePriceRequired = '가격을 입력해주세요';
 
+  // ── 구매 전 체크리스트 ────────────────────────────────────
+  static const checklistTitle = '잠깐, 마지막 점검!';
+  static const checklistQ1 = '지금 당장 필요한가?';
+  static const checklistQ2 = '이미 비슷한 게 있지는 않은가?';
+  static const checklistQ3 = '한 달 후에도 쓸 것 같은가?';
+  static const checklistConfirm = '그래도 살게요';
+
+  // ── 이미지 첨부 ──────────────────────────────────────────
+  static const homeImagePickerLabel = '사진 첨부 (선택)';
+  static const homeImagePickerCamera = '사진 찍기';
+  static const homeImagePickerGallery = '앨범에서 선택';
+  static const homeImagePickerRemove = '사진 제거';
+
   // ── 빈 상태 ─────────────────────────────────────────────
   static const emptyWaitingTitle = '오늘은 욕심이 없는 날이네요';
   static const emptyWaitingBody =
@@ -99,6 +112,21 @@ class AppStrings {
   static const myNicknameHint = '닉네임 1회 변경 가능';
   static const myTheme = '테마';
 
+  // ── 저축 목표 ────────────────────────────────────────────
+  static const mySavingsGoalSection = '절약 목표';
+  static const mySavingsGoalEmpty = '절약 목표를 설정해\n소비 동기를 만들어보세요';
+  static const mySavingsGoalTitleHint = '목표 이름 (예: 내집마련, 여행)';
+  static const mySavingsGoalAmountHint = '목표 금액';
+  static const mySavingsGoalCurrentHint = '현재 저축 금액';
+  static const mySavingsGoalAddTitle = '절약 목표 추가';
+  static const mySavingsGoalEditTitle = '절약 목표';
+  static const mySavingsGoalAddButton = '추가';
+  static const mySavingsGoalUpdateButton = '업데이트';
+  static const mySavingsGoalDeleteButton = '목표 삭제';
+  static const mySavingsGoalTitleRequired = '목표 이름을 입력해주세요';
+  static const mySavingsGoalAmountRequired = '목표 금액을 입력해주세요';
+  static const mySavingsGoalReached = '목표 달성!';
+
   // ── 닉네임 다이얼로그 ─────────────────────────────────────
   static const nicknameChangeTitle = '닉네임 변경';
   static const nicknameChangeWarning = '닉네임은 한 번만 변경할 수 있어요.';
@@ -143,13 +171,24 @@ class AppStrings {
   // ── 알림 ────────────────────────────────────────────────
   static const notifChannelName = '참기 알림';
   static const notifChannelDesc = '72시간 참기 진행 알림';
-  static const notif24hTitle = '하루가 지났어요';
-  static const notif48hTitle = '이틀이 지났어요';
-  static const notif72hTitle = '72시간을 참으셨어요!';
+
+  // 1시간 — 긍정 강화
+  static const notif1hTitle = '72시간 참기 시작! ✅';
+  static String notif1hBody(String name) =>
+      '"$name" — 지금 이 결정이 현명한 선택의 시작이에요 🌿';
+
+  // 24시간 — 경각심 자극
+  static const notif24hTitle = '🔥 지금이 가장 위험한 순간이에요';
   static String notif24hBody(String name) =>
-      '"$name" — 아직 사고 싶으신가요? 이틀 더 참아봐요!';
+      '"$name" — 충동구매의 80%는 24시간 안에 일어납니다. 조금만 더 버텨보세요!';
+
+  // 48시간 — 반문으로 성찰 유도
+  static const notif48hTitle = '💪 벌써 48시간을 참았어요';
   static String notif48hBody(String name) =>
-      '"$name" — 거의 다 왔어요! 하루만 더 버텨봐요.';
+      '"$name" — 아직도 필요하다고 느껴지나요?';
+
+  // 72시간 — 감정 확인
+  static const notif72hTitle = '⏰ 72시간이 됐어요';
   static String notif72hBody(String name) =>
-      '"$name" — 이제 결정할 시간이에요. 살까요, 참을까요?';
+      '"$name" — 지금 어떤 마음인가요?';
 }

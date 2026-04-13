@@ -6,6 +6,7 @@ abstract class WishItemRepository {
   Stream<List<WishItem>> get itemsStream;
 
   Future<void> addItem(WishItem item);
+  Future<void> updateItem(String id, {required String name, double? price, String? reason});
   Future<void> updateStatus(String id, WishItemStatus status);
   Future<void> deleteItem(String id);
   void dispose();

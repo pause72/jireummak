@@ -54,6 +54,11 @@ class FirestoreWishItemRepository implements WishItemRepository {
   }
 
   @override
+  Future<void> updateItem(String id, {required String name, double? price, String? reason}) async {
+    await _col.doc(id).update({'name': name, 'price': price, 'reason': reason});
+  }
+
+  @override
   Future<void> updateStatus(String id, WishItemStatus status) async {
     await _col.doc(id).update({'status': status.name});
   }
@@ -108,6 +113,9 @@ class _EmptyWishItemRepository implements WishItemRepository {
 
   @override
   Future<void> addItem(WishItem item) async {}
+
+  @override
+  Future<void> updateItem(String id, {required String name, double? price, String? reason}) async {}
 
   @override
   Future<void> updateStatus(String id, WishItemStatus status) async {}

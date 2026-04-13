@@ -6,6 +6,7 @@ import '../../../home/domain/models/wish_item_model.dart';
 import '../../../home/domain/models/wish_item_status.dart';
 import '../../../home/domain/models/wish_stats.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../my/presentation/providers/notification_settings_provider.dart';
 
 part 'wish_item_provider.g.dart';
 
@@ -24,13 +25,14 @@ class WishItemNotifier extends _$WishItemNotifier {
   }
 
   Future<void> addItem({
+    String? id,
     required String name,
     double? price,
     String? category,
     String? reason,
   }) async {
     final item = WishItem(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: id ?? DateTime.now().millisecondsSinceEpoch.toString(),
       name: name,
       price: price,
       category: category,
@@ -39,7 +41,18 @@ class WishItemNotifier extends _$WishItemNotifier {
     );
     try {
       await ref.read(wishItemRepositoryProvider).addItem(item);
-      await NotificationService().scheduleWishNotifications(item);
+      final notifEnabled = ref.read(notificationSettingsNotifierProvider);
+      if (notifEnabled) {
+        await NotificationService().scheduleWishNotifications(item);
+      }
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> updateItem(String id, {required String name, double? price, String? reason}) async {
+    try {
+      await ref.read(wishItemRepositoryProvider).updateItem(id, name: name, price: price, reason: reason);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
     }
