@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_policy_strings.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../features/auth/domain/models/user_model.dart';
@@ -41,14 +43,14 @@ class MyPage extends ConsumerWidget {
               const SizedBox(height: 16),
               _StatsSummaryCard(stats: stats),
               const SizedBox(height: 24),
-              _SectionTitle('배움', colors: colors),
+              _SectionTitle(AppStrings.myLearning, colors: colors),
               const SizedBox(height: 10),
               _SettingsGroup(
                 colors: colors,
                 items: [
                   _SettingsItem(
                     icon: Icons.menu_book_rounded,
-                    label: '배움',
+                    label: AppStrings.myLearning,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(builder: (_) => const _LearnDetailPage()),
                     ),
@@ -56,14 +58,14 @@ class MyPage extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 24),
-              _SectionTitle('설정', colors: colors),
+              _SectionTitle(AppStrings.mySettings, colors: colors),
               const SizedBox(height: 10),
               _SettingsGroup(
                 colors: colors,
                 items: [
                   _SettingsItem(
                     icon: Icons.notifications_none_rounded,
-                    label: '알림 설정',
+                    label: AppStrings.myNotificationSettings,
                     onTap: () {},
                   ),
                 ],
@@ -71,28 +73,28 @@ class MyPage extends ConsumerWidget {
               const SizedBox(height: 12),
               const _ThemeToggleCard(),
               const SizedBox(height: 24),
-              _SectionTitle('앱 정보', colors: colors),
+              _SectionTitle(AppStrings.myAppInfo, colors: colors),
               const SizedBox(height: 10),
               _SettingsGroup(
                 colors: colors,
                 items: [
                   _SettingsItem(
                     icon: Icons.info_outline_rounded,
-                    label: '버전',
+                    label: AppStrings.myVersion,
                     trailing: '1.0.0',
                     onTap: () {},
                     hideChevron: true,
                   ),
                   _SettingsItem(
                     icon: Icons.description_outlined,
-                    label: '이용약관',
+                    label: AppStrings.myTerms,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(builder: (_) => const _TermsPage()),
                     ),
                   ),
                   _SettingsItem(
                     icon: Icons.privacy_tip_outlined,
-                    label: '개인정보 처리방침',
+                    label: AppStrings.myPrivacy,
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute<void>(builder: (_) => const _PrivacyPage()),
                     ),
@@ -106,14 +108,14 @@ class MyPage extends ConsumerWidget {
                   if (isLoggedIn)
                     _SettingsItem(
                       icon: Icons.logout_rounded,
-                      label: '로그아웃',
+                      label: AppStrings.myLogout,
                       labelColor: AppColors.red,
                       onTap: () => _showLogoutDialog(context, ref),
                     )
                   else
                     _SettingsItem(
                       icon: Icons.login_rounded,
-                      label: 'Google로 로그인',
+                      label: AppStrings.loginGoogleButton,
                       onTap: () => context.go('/login'),
                     ),
                 ],
@@ -121,10 +123,10 @@ class MyPage extends ConsumerWidget {
               const SizedBox(height: 32),
               Center(
                 child: Text(
-                  '지름막 · 충동구매를 막는 72시간의 습관',
+                  AppStrings.appFooter,
                   style: TextStyle(
                     fontSize: 11,
-                    color: colors.border,
+                    color: colors.textTertiary,
                   ),
                 ),
               ),
@@ -160,19 +162,19 @@ class MyPage extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: colors.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('로그아웃', style: TextStyle(color: colors.textPrimary, fontSize: 16)),
-        content: Text('로그아웃 하시겠어요?', style: TextStyle(color: colors.textSecondary, fontSize: 14)),
+        title: Text(AppStrings.myLogout, style: TextStyle(color: colors.textPrimary, fontSize: 16)),
+        content: Text(AppStrings.myLogoutConfirmBody, style: TextStyle(color: colors.textSecondary, fontSize: 14)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('취소', style: TextStyle(color: colors.textSecondary)),
+            child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
           ),
           TextButton(
             onPressed: () async {
               Navigator.of(ctx).pop();
               await ref.read(authNotifierProvider.notifier).signOut();
             },
-            child: const Text('로그아웃', style: TextStyle(color: AppColors.red)),
+            child: const Text(AppStrings.myLogout, style: TextStyle(color: AppColors.red)),
           ),
         ],
       ),
@@ -207,7 +209,7 @@ class _StatsSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '총 절약 금액',
+                  AppStrings.myTotalSaved,
                   style: TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w500, letterSpacing: 0.4),
                 ),
                 const SizedBox(height: 4),
@@ -220,11 +222,11 @@ class _StatsSummaryCard extends StatelessWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                _SummaryItem(label: '참음', value: '${stats.cancelledCount}번', color: AppColors.blue),
+                _SummaryItem(label: AppStrings.myResisted, value: '${stats.cancelledCount}번', color: AppColors.blue),
                 _Divider(),
-                _SummaryItem(label: '구매', value: '${stats.purchasedCount}번', color: AppColors.green),
+                _SummaryItem(label: AppStrings.myPurchased, value: '${stats.purchasedCount}번', color: AppColors.green),
                 _Divider(),
-                _SummaryItem(label: '총 등록', value: '${stats.totalCount}개', color: AppColors.accent),
+                _SummaryItem(label: AppStrings.myTotalRegistered, value: '${stats.totalCount}개', color: AppColors.accent),
               ],
             ),
             if (stats.decidedCount > 0) ...[
@@ -235,7 +237,7 @@ class _StatsSummaryCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '충동구매 저항률',
+                    AppStrings.myResistanceRate,
                     style: TextStyle(fontSize: 12, color: colors.textSecondary),
                   ),
                   Text(
@@ -306,9 +308,9 @@ class _ProfileCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('로그인이 필요해요', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textPrimary)),
+                    Text(AppStrings.loginRequired, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textPrimary)),
                     const SizedBox(height: 4),
-                    Text('Google 로그인으로 데이터를 보관하세요', style: TextStyle(fontSize: 12, color: colors.textTertiary)),
+                    Text(AppStrings.loginGooglePrompt, style: TextStyle(fontSize: 12, color: colors.textTertiary)),
                   ],
                 ),
               ),
@@ -368,7 +370,7 @@ class _ProfileCard extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        nicknameState.nickname.isNotEmpty ? nicknameState.nickname : '로딩 중...',
+                        nicknameState.nickname.isNotEmpty ? nicknameState.nickname : AppStrings.loading,
                         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -415,7 +417,7 @@ class _ProfileCard extends StatelessWidget {
                         const Icon(Icons.diversity_3_rounded, size: 11, color: AppColors.accent),
                         const SizedBox(width: 4),
                         Text(
-                          '닉네임 1회 변경 가능',
+                          AppStrings.myNicknameHint,
                           style: TextStyle(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600),
                         ),
                       ],
@@ -561,8 +563,18 @@ class _ThemeToggleCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeNotifierProvider);
-    final isDark = themeMode == ThemeMode.dark;
     final colors = context.colors;
+
+    final leadingIcon = switch (themeMode) {
+      ThemeMode.dark => Icons.dark_mode_rounded,
+      ThemeMode.light => Icons.light_mode_rounded,
+      ThemeMode.system => Icons.smartphone_rounded,
+    };
+    final leadingColor = switch (themeMode) {
+      ThemeMode.dark => AppColors.accent,
+      ThemeMode.light => AppColors.yellow,
+      ThemeMode.system => AppColors.green,
+    };
 
     return Container(
       decoration: BoxDecoration(
@@ -573,14 +585,10 @@ class _ThemeToggleCard extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Row(
         children: [
-          Icon(
-            isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
-            size: 20,
-            color: isDark ? AppColors.accent : AppColors.yellow,
-          ),
+          Icon(leadingIcon, size: 20, color: leadingColor),
           const SizedBox(width: 14),
           Expanded(
-            child: Text('테마', style: TextStyle(fontSize: 14, color: colors.textPrimary)),
+            child: Text(AppStrings.myTheme, style: TextStyle(fontSize: 14, color: colors.textPrimary)),
           ),
           Container(
             decoration: BoxDecoration(
@@ -591,14 +599,20 @@ class _ThemeToggleCard extends ConsumerWidget {
             child: Row(
               children: [
                 _ThemeSegment(
+                  icon: Icons.smartphone_rounded,
+                  selected: themeMode == ThemeMode.system,
+                  onTap: () => ref.read(themeNotifierProvider.notifier).setSystem(),
+                ),
+                const SizedBox(width: 4),
+                _ThemeSegment(
                   icon: Icons.light_mode_rounded,
-                  selected: !isDark,
+                  selected: themeMode == ThemeMode.light,
                   onTap: () => ref.read(themeNotifierProvider.notifier).setLight(),
                 ),
                 const SizedBox(width: 4),
                 _ThemeSegment(
                   icon: Icons.dark_mode_rounded,
-                  selected: isDark,
+                  selected: themeMode == ThemeMode.dark,
                   onTap: () => ref.read(themeNotifierProvider.notifier).setDark(),
                 ),
               ],
@@ -650,41 +664,17 @@ class _TermsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return _PolicyScaffold(
-      title: '이용약관',
+      title: AppStrings.myTerms,
       colors: colors,
       sections: const [
-        _PolicySection(
-          title: '제1조 (목적)',
-          body: '본 약관은 지름막(이하 "앱")이 제공하는 서비스의 이용과 관련하여 앱과 이용자 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.',
-        ),
-        _PolicySection(
-          title: '제2조 (서비스 이용)',
-          body: '① 앱은 충동구매를 방지하기 위한 72시간 대기 기능, 소비 기록 관리, 커뮤니티 나눔 기능을 제공합니다.\n② 서비스는 Google 계정을 통한 로그인 후 이용 가능하며, 일부 기능은 비로그인 상태에서도 사용할 수 있습니다.\n③ 이용자는 앱의 서비스를 개인적, 비상업적 목적으로만 이용할 수 있습니다.',
-        ),
-        _PolicySection(
-          title: '제3조 (이용자의 의무)',
-          body: '① 이용자는 다음 행위를 해서는 안 됩니다.\n  - 타인의 정보를 도용하거나 허위 정보를 등록하는 행위\n  - 앱의 운영을 방해하거나 서버에 과부하를 유발하는 행위\n  - 커뮤니티에 욕설, 비방, 광고 등 부적절한 게시물을 작성하는 행위\n  - 관련 법령에 위반되는 행위\n② 이용자는 본 약관 및 관련 법령을 준수할 의무가 있습니다.',
-        ),
-        _PolicySection(
-          title: '제4조 (서비스 중단)',
-          body: '앱은 다음의 경우 서비스 제공을 일시적으로 중단할 수 있습니다.\n  - 서버 점검, 교체, 고장, 통신두절 등의 경우\n  - 천재지변, 국가비상사태 등 불가항력적인 경우\n  - 기타 앱이 서비스 제공이 불가능하다고 판단하는 경우',
-        ),
-        _PolicySection(
-          title: '제5조 (광고)',
-          body: '앱은 Google AdMob을 통한 광고를 제공할 수 있으며, 광고 수익은 서비스 운영 및 개선에 사용됩니다. 광고는 관련 법령에 따라 표시됩니다.',
-        ),
-        _PolicySection(
-          title: '제6조 (면책조항)',
-          body: '① 앱은 이용자가 서비스를 통해 기대하는 수익이나 소비 절약 효과에 대해 보증하지 않습니다.\n② 이용자 간 커뮤니티 나눔 게시물의 내용에 대해 앱은 책임을 지지 않습니다.\n③ 앱은 무료로 제공되는 서비스의 중단으로 인한 손해에 대해 책임을 지지 않습니다.',
-        ),
-        _PolicySection(
-          title: '제7조 (약관의 변경)',
-          body: '앱은 필요한 경우 약관을 변경할 수 있으며, 변경된 약관은 앱 내 공지를 통해 이용자에게 알립니다. 변경된 약관에 동의하지 않는 경우 서비스 이용을 중단하고 탈퇴할 수 있습니다.',
-        ),
-        _PolicySection(
-          title: '부칙',
-          body: '본 약관은 2025년 1월 1일부터 시행됩니다.',
-        ),
+        _PolicySection(title: AppPolicyStrings.terms1Title, body: AppPolicyStrings.terms1Body),
+        _PolicySection(title: AppPolicyStrings.terms2Title, body: AppPolicyStrings.terms2Body),
+        _PolicySection(title: AppPolicyStrings.terms3Title, body: AppPolicyStrings.terms3Body),
+        _PolicySection(title: AppPolicyStrings.terms4Title, body: AppPolicyStrings.terms4Body),
+        _PolicySection(title: AppPolicyStrings.terms5Title, body: AppPolicyStrings.terms5Body),
+        _PolicySection(title: AppPolicyStrings.terms6Title, body: AppPolicyStrings.terms6Body),
+        _PolicySection(title: AppPolicyStrings.terms7Title, body: AppPolicyStrings.terms7Body),
+        _PolicySection(title: AppPolicyStrings.termsAdditionalTitle, body: AppPolicyStrings.termsAdditionalBody),
       ],
     );
   }
@@ -699,41 +689,17 @@ class _PrivacyPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     return _PolicyScaffold(
-      title: '개인정보 처리방침',
+      title: AppStrings.myPrivacy,
       colors: colors,
       sections: const [
-        _PolicySection(
-          title: '1. 수집하는 개인정보',
-          body: '앱은 서비스 제공을 위해 다음과 같은 정보를 수집합니다.\n\n[필수 수집 항목]\n  - Google 계정 이메일, 프로필 사진 (로그인 시)\n  - 사용자가 입력한 참기 아이템 이름, 가격, 이유\n\n[자동 수집 항목]\n  - 기기 정보 (광고 제공 목적, Google AdMob)\n  - 앱 이용 기록',
-        ),
-        _PolicySection(
-          title: '2. 개인정보의 수집 목적',
-          body: '수집한 개인정보는 다음 목적으로만 사용됩니다.\n  - 회원 식별 및 서비스 제공\n  - 소비 기록 저장 및 통계 제공\n  - 커뮤니티 나눔 서비스 운영\n  - 맞춤형 광고 제공 (Google AdMob)',
-        ),
-        _PolicySection(
-          title: '3. 개인정보의 보유 및 이용기간',
-          body: '수집한 개인정보는 서비스 이용 기간 동안 보유하며, 회원 탈퇴 시 즉시 삭제합니다. 단, 관련 법령에 따라 일정 기간 보관이 필요한 경우 해당 기간 동안 보관합니다.',
-        ),
-        _PolicySection(
-          title: '4. 개인정보의 제3자 제공',
-          body: '앱은 이용자의 개인정보를 원칙적으로 제3자에게 제공하지 않습니다. 다만, 다음의 경우는 예외입니다.\n  - 이용자가 사전에 동의한 경우\n  - 법령에 따라 수사기관의 요청이 있는 경우\n  - Google AdMob을 통한 광고 서비스 제공 (기기 식별 정보에 한함)',
-        ),
-        _PolicySection(
-          title: '5. 개인정보 처리 위탁',
-          body: '앱은 서비스 운영을 위해 다음 업체에 개인정보 처리를 위탁합니다.\n\n  - Google Firebase (데이터 저장 및 인증)\n    위탁 목적: 회원 인증, 데이터 저장\n\n  - Google AdMob (광고 서비스)\n    위탁 목적: 광고 제공 및 분석',
-        ),
-        _PolicySection(
-          title: '6. 이용자의 권리',
-          body: '이용자는 언제든지 다음의 권리를 행사할 수 있습니다.\n  - 개인정보 열람 요청\n  - 개인정보 수정 요청\n  - 개인정보 삭제 요청 (회원 탈퇴)\n  - 개인정보 처리 정지 요청\n\n위 권리 행사는 앱 내 설정 또는 이메일을 통해 요청하실 수 있습니다.',
-        ),
-        _PolicySection(
-          title: '7. 개인정보 보호책임자',
-          body: '개인정보 처리에 관한 문의는 앱 내 이메일을 통해 연락해 주시기 바랍니다. 이용자의 문의에 성실히 답변하겠습니다.',
-        ),
-        _PolicySection(
-          title: '8. 방침의 변경',
-          body: '본 개인정보 처리방침은 법령, 정책 변경에 따라 수정될 수 있으며 변경 시 앱 내 공지를 통해 안내합니다.\n\n시행일: 2025년 1월 1일',
-        ),
+        _PolicySection(title: AppPolicyStrings.privacy1Title, body: AppPolicyStrings.privacy1Body),
+        _PolicySection(title: AppPolicyStrings.privacy2Title, body: AppPolicyStrings.privacy2Body),
+        _PolicySection(title: AppPolicyStrings.privacy3Title, body: AppPolicyStrings.privacy3Body),
+        _PolicySection(title: AppPolicyStrings.privacy4Title, body: AppPolicyStrings.privacy4Body),
+        _PolicySection(title: AppPolicyStrings.privacy5Title, body: AppPolicyStrings.privacy5Body),
+        _PolicySection(title: AppPolicyStrings.privacy6Title, body: AppPolicyStrings.privacy6Body),
+        _PolicySection(title: AppPolicyStrings.privacy7Title, body: AppPolicyStrings.privacy7Body),
+        _PolicySection(title: AppPolicyStrings.privacy8Title, body: AppPolicyStrings.privacy8Body),
       ],
     );
   }
@@ -835,7 +801,7 @@ class _LearnDetailPage extends StatelessWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          '배움',
+          AppStrings.myLearning,
           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: colors.textPrimary),
         ),
       ),
@@ -898,13 +864,13 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
     return AlertDialog(
       backgroundColor: colors.surface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text('닉네임 변경', style: TextStyle(color: colors.textPrimary, fontSize: 16)),
+      title: Text(AppStrings.nicknameChangeTitle, style: TextStyle(color: colors.textPrimary, fontSize: 16)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '닉네임은 한 번만 변경할 수 있어요.',
+            AppStrings.nicknameChangeWarning,
             style: TextStyle(color: colors.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 12),
@@ -915,7 +881,7 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
             style: TextStyle(color: colors.textPrimary, fontSize: 14),
             onSubmitted: (_) => _submit(),
             decoration: InputDecoration(
-              hintText: '새 닉네임 입력',
+              hintText: AppStrings.nicknameInputHint,
               hintStyle: TextStyle(color: colors.textTertiary),
               errorText: _errorMessage,
               filled: true,
@@ -948,7 +914,7 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
-          child: Text('취소', style: TextStyle(color: colors.textSecondary)),
+          child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
         ),
         TextButton(
           onPressed: _isLoading ? null : _submit,
@@ -958,7 +924,7 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
                 )
-              : const Text('변경', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+              : const Text(AppStrings.nicknameChangeButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
         ),
       ],
     );

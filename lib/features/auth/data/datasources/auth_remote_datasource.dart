@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_naver_login/flutter_naver_login.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
@@ -42,21 +41,6 @@ class AuthRemoteDatasource {
       idToken: googleAuth.idToken,
     );
     return _firebaseAuth.signInWithCredential(credential);
-  }
-
-  // ── Naver ─────────────────────────────────────────────
-  Future<UserCredential> signInWithNaver() async {
-    final result = await FlutterNaverLogin.logIn();
-    if (result.status != NaverLoginStatus.loggedIn) {
-      throw Exception('네이버 로그인이 취소되었습니다.');
-    }
-
-    final accessToken = await FlutterNaverLogin.currentAccessToken;
-    final firebaseToken = await _getFirebaseCustomToken(
-      provider: 'naver',
-      accessToken: accessToken.accessToken,
-    );
-    return _firebaseAuth.signInWithCustomToken(firebaseToken);
   }
 
   // ── Kakao ─────────────────────────────────────────────
@@ -104,10 +88,6 @@ class AuthRemoteDatasource {
   Future<void> signOut() async {
     await _firebaseAuth.signOut();
     await _googleSignIn.signOut();
-    // 네이버 로그아웃
-    try {
-      await FlutterNaverLogin.logOut();
-    } catch (_) {}
     // 카카오 로그아웃
     try {
       await kakao.UserApi.instance.logout();

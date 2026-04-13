@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../domain/models/wish_item_model.dart';
 import '../../domain/models/wish_item_status.dart';
@@ -141,7 +142,7 @@ class WishItemCard extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _DecisionButton(
-                      label: '살게요',
+                      label: AppStrings.cardBuy,
                       icon: Icons.shopping_bag_outlined,
                       color: colors.surfaceHighlight,
                       textColor: colors.textTertiary,
@@ -153,7 +154,7 @@ class WishItemCard extends ConsumerWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _DecisionButton(
-                      label: '참을게요',
+                      label: AppStrings.cardResist,
                       icon: Icons.self_improvement_rounded,
                       color: AppColors.green,
                       textColor: Colors.white,
@@ -201,14 +202,14 @@ class WishItemCard extends ConsumerWidget {
           style: TextStyle(color: colors.textPrimary, fontSize: 16),
         ),
         content: Text(
-          '참기를 중지할까요?',
+          AppStrings.cardDeleteContent,
           style: TextStyle(color: colors.textSecondary, fontSize: 14),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: Text(
-              '계속참기',
+              AppStrings.cardDeleteCancel,
               style: TextStyle(color: colors.textSecondary),
             ),
           ),
@@ -218,7 +219,7 @@ class WishItemCard extends ConsumerWidget {
               Navigator.of(ctx).pop();
             },
             child: const Text(
-              '중지',
+              AppStrings.cardDeleteConfirm,
               style: TextStyle(color: AppColors.red),
             ),
           ),
@@ -329,7 +330,7 @@ class _PastelFlowPainter extends CustomPainter {
     // 파스텔 흐름 — 그라데이션 폭을 3배로 키우고 phase로 슬라이드
     final colors = expired ? _pastelExpired : _pastelColors;
     final gradW = w * 3;
-    final offset = -gradW * phase;
+    final offset = -gradW * (1 - phase);
 
     canvas.save();
     canvas.clipRRect(
@@ -401,7 +402,7 @@ class _CircularTimer extends StatelessWidget {
           // 중앙 텍스트
           if (expired)
             Text(
-              '결정!',
+              AppStrings.cardDecisionBadge,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: FontWeight.w800,

@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
         android:label="지름막"
         android:name="${applicationName}"
@@ -28,12 +30,6 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713"/>
-
-        <!-- 네이버 로그인 -->
-        <activity
-            android:name="com.nhn.android.naverlogin.ui.OAuthLoginActivity"
-            android:exported="true"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
 
         <!-- 카카오 로그인 -->
         <activity

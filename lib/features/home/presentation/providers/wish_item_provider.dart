@@ -5,6 +5,7 @@ import '../../../home/data/repositories/wish_item_repository_impl.dart';
 import '../../../home/domain/models/wish_item_model.dart';
 import '../../../home/domain/models/wish_item_status.dart';
 import '../../../home/domain/models/wish_stats.dart';
+import '../../../../core/services/notification_service.dart';
 
 part 'wish_item_provider.g.dart';
 
@@ -36,15 +37,35 @@ class WishItemNotifier extends _$WishItemNotifier {
       reason: reason,
       createdAt: DateTime.now(),
     );
-    await ref.read(wishItemRepositoryProvider).addItem(item);
+    try {
+      await ref.read(wishItemRepositoryProvider).addItem(item);
+      await NotificationService().scheduleWishNotifications(item);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> deleteItem(String id) async {
-    await ref.read(wishItemRepositoryProvider).deleteItem(id);
+    try {
+      await ref.read(wishItemRepositoryProvider).deleteItem(id);
+      await NotificationService().cancelWishNotifications(id);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> updateStatus(String id, WishItemStatus status) async {
-    await ref.read(wishItemRepositoryProvider).updateStatus(id, status);
+    try {
+      await ref.read(wishItemRepositoryProvider).updateStatus(id, status);
+      await NotificationService().cancelWishNotifications(id);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  void clearError() {
+    final cached = ref.read(wishItemRepositoryProvider).items;
+    state = AsyncValue.data(cached);
   }
 }
 

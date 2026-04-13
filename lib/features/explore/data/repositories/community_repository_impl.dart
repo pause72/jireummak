@@ -38,6 +38,22 @@ class FirestoreCommunityRepository implements CommunityRepository {
   }
 
   @override
+  Future<void> updatePost(
+    String postId, {
+    required PostType type,
+    required String content,
+    String? itemName,
+    required bool resisted,
+  }) async {
+    await _col.doc(postId).update({
+      'type': type.name,
+      'content': content,
+      'itemName': itemName,
+      'resisted': resisted,
+    });
+  }
+
+  @override
   Future<void> toggleLike(String postId, String currentUid) async {
     final doc = _col.doc(postId);
     final snap = await doc.get();

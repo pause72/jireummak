@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../../../core/ads/ad_config.dart';
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/my/presentation/providers/nickname_provider.dart';
@@ -23,21 +24,21 @@ class ExploreContent extends StatelessWidget {
       children: [
         _QuoteCard(colors: colors),
         const SizedBox(height: 16),
-        _SectionLabel('소비 습관 팁', colors: colors),
+        _SectionLabel(AppStrings.sectionConsumptionTips, colors: colors),
         const SizedBox(height: 10),
         ..._consumptionTips.map((tip) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _TipCard(tip: tip, colors: colors),
             )),
         const SizedBox(height: 6),
-        _SectionLabel('미니멀리즘', colors: colors),
+        _SectionLabel(AppStrings.sectionMinimalism, colors: colors),
         const SizedBox(height: 10),
         ..._minimalismTips.map((tip) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
               child: _TipCard(tip: tip, colors: colors),
             )),
         const SizedBox(height: 6),
-        _SectionLabel('72시간 룰', colors: colors),
+        _SectionLabel(AppStrings.section72hRule, colors: colors),
         const SizedBox(height: 10),
         ..._ruleTips.map((tip) => Padding(
               padding: const EdgeInsets.only(bottom: 10),
@@ -128,6 +129,14 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
 
     return Scaffold(
       backgroundColor: colors.background,
+      floatingActionButton: _WriteFab(
+        onTap: () => showModalBottomSheet<void>(
+          context: context,
+          isScrollControlled: true,
+          backgroundColor: Colors.transparent,
+          builder: (_) => const _WritePostSheet(),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -138,15 +147,15 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 height: _bannerAd!.size.height.toDouble(),
                 child: AdWidget(ad: _bannerAd!),
               ),
-            _SearchBar(controller: _searchController),
             _FilterRow(selected: _filter, onChanged: (f) => setState(() => _filter = f)),
+            _SearchBar(controller: _searchController),
             Expanded(
               child: postsAsync.when(
                 loading: () => const Center(
                   child: CircularProgressIndicator(color: AppColors.accent, strokeWidth: 2),
                 ),
                 error: (e, _) => Center(
-                  child: Text('불러오기 실패', style: TextStyle(color: context.colors.textSecondary)),
+                  child: Text(AppStrings.exploreLoadError, style: TextStyle(color: context.colors.textSecondary)),
                 ),
                 data: (posts) {
                   var filtered = _filter == _PostFilter.all
@@ -167,7 +176,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                   if (filtered.isEmpty) {
                     return Center(
                       child: Text(
-                        '아직 게시글이 없어요\n첫 번째 나눔을 남겨보세요!',
+                        AppStrings.exploreEmptyPosts,
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 14, color: colors.textTertiary, height: 1.7),
                       ),
@@ -206,14 +215,6 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                 },
               ),
             ),
-            _WriteButton(
-              onTap: () => showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => const _WritePostSheet(),
-              ),
-            ),
           ],
         ),
       ),
@@ -221,57 +222,47 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
   }
 }
 
-class _WriteButton extends StatelessWidget {
-  const _WriteButton({required this.onTap});
+class _WriteFab extends StatelessWidget {
+  const _WriteFab({required this.onTap});
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.accent.withValues(alpha: 0.45),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
-            borderRadius: BorderRadius.circular(18),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.accent.withValues(alpha: 0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.edit_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 6),
+            Text(
+              AppStrings.exploreFabLabel,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+                letterSpacing: 0.3,
               ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(Icons.edit_rounded, size: 15, color: Colors.white),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                '나눔 글쓰기',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -304,7 +295,7 @@ class _SearchBar extends StatelessWidget {
                 controller: controller,
                 style: TextStyle(fontSize: 14, color: colors.textPrimary),
                 decoration: InputDecoration(
-                  hintText: '내용 검색',
+                  hintText: AppStrings.exploreSearchHint,
                   hintStyle: TextStyle(fontSize: 14, color: colors.textTertiary),
                   border: InputBorder.none,
                   isDense: true,
@@ -342,9 +333,9 @@ class _FilterRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final items = <({_PostFilter filter, String label, IconData icon, Color color})>[
-      (filter: _PostFilter.all,    label: '전체', icon: Icons.grid_view_rounded,         color: const Color(0xFF6B7280)),
-      (filter: _PostFilter.review, label: '후기', icon: Icons.rate_review_outlined,      color: AppColors.green),
-      (filter: _PostFilter.tip,    label: '팁',   icon: Icons.lightbulb_outline_rounded, color: AppColors.accent),
+      (filter: _PostFilter.all,    label: AppStrings.exploreFilterAll, icon: Icons.grid_view_rounded,         color: const Color(0xFF6B7280)),
+      (filter: _PostFilter.review, label: AppStrings.exploreFilterReview, icon: Icons.rate_review_outlined,      color: AppColors.green),
+      (filter: _PostFilter.tip,    label: AppStrings.exploreFilterTip,   icon: Icons.lightbulb_outline_rounded, color: AppColors.accent),
     ];
 
     return Padding(
@@ -428,127 +419,327 @@ class _PostCard extends ConsumerWidget {
         ? nicknameAsync.value!
         : post.nickname;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colors.border),
+    return GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _PostDetailPage(
+            post: post,
+            currentUid: currentUid,
+            onLike: onLike,
+            displayNickname: displayNickname,
+            avatarColor: avatarColor,
+          ),
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: avatarColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(17),
-                ),
-                child: Center(
-                  child: Text(
-                    displayNickname.isNotEmpty ? displayNickname[0] : '?',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: avatarColor,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: colors.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: colors.border),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: avatarColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(17),
+                  ),
+                  child: Center(
+                    child: Text(
+                      displayNickname.isNotEmpty ? displayNickname[0] : '?',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: avatarColor,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      displayNickname,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colors.textPrimary,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayNickname,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
                       ),
+                      Text(
+                        post.relativeDate,
+                        style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: isReview
+                        ? AppColors.green.withValues(alpha: 0.12)
+                        : AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isReview ? AppStrings.exploreFilterReview : AppStrings.exploreFilterTip,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isReview ? AppColors.green : AppColors.accent,
                     ),
+                  ),
+                ),
+                if (currentUid == post.uid) ...[
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => _EditPostSheet(post: post),
+                    ),
+                    child: Icon(Icons.edit_outlined, size: 16, color: colors.textTertiary),
+                  ),
+                ],
+              ],
+            ),
+            if (post.itemName != null && post.itemName!.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: colors.surfaceHighlight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.timer_outlined, size: 13, color: colors.textTertiary),
+                    const SizedBox(width: 5),
                     Text(
-                      post.relativeDate,
-                      style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                      AppStrings.exploreResistStatus(post.resisted, post.itemName ?? ''),
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: post.resisted ? AppColors.blue : colors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: isReview
-                      ? AppColors.green.withValues(alpha: 0.12)
-                      : AppColors.accent.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  isReview ? '후기' : '팁',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isReview ? AppColors.green : AppColors.accent,
-                  ),
-                ),
-              ),
             ],
-          ),
-          if (post.itemName != null && post.itemName!.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: colors.surfaceHighlight,
-                borderRadius: BorderRadius.circular(8),
-              ),
+            Text(
+              post.content,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, height: 1.6, color: colors.textPrimary),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: onLike,
               child: Row(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.timer_outlined, size: 13, color: colors.textTertiary),
-                  const SizedBox(width: 5),
+                  Icon(
+                    isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    size: 16,
+                    color: isLiked ? AppColors.red : colors.textTertiary,
+                  ),
+                  const SizedBox(width: 4),
                   Text(
-                    '72시간 후 ${post.resisted ? "참았어요" : "샀어요"} — ${post.itemName}',
+                    '${post.likesCount}',
                     style: TextStyle(
                       fontSize: 12,
-                      color: post.resisted ? AppColors.blue : colors.textSecondary,
-                      fontWeight: FontWeight.w500,
+                      color: isLiked ? AppColors.red : colors.textTertiary,
                     ),
                   ),
                 ],
               ),
             ),
           ],
-          const SizedBox(height: 10),
-          Text(
-            post.content,
-            style: TextStyle(fontSize: 14, height: 1.6, color: colors.textPrimary),
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: onLike,
-            child: Row(
-              children: [
-                Icon(
-                  isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                  size: 16,
-                  color: isLiked ? AppColors.red : colors.textTertiary,
+        ),
+      ),
+    );
+  }
+}
+
+// ── 게시글 상세 페이지 ─────────────────────────────────────
+
+class _PostDetailPage extends ConsumerWidget {
+  const _PostDetailPage({
+    required this.post,
+    required this.currentUid,
+    required this.onLike,
+    required this.displayNickname,
+    required this.avatarColor,
+  });
+  final CommunityPost post;
+  final String? currentUid;
+  final VoidCallback? onLike;
+  final String displayNickname;
+  final Color avatarColor;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = context.colors;
+    final isReview = post.type == PostType.review;
+    final isLiked = currentUid != null && post.isLikedBy(currentUid!);
+
+    return Scaffold(
+      backgroundColor: colors.background,
+      appBar: AppBar(
+        backgroundColor: colors.background,
+        elevation: 0,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: colors.textPrimary),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        title: Text(
+          isReview ? '후기' : '팁',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
+        ),
+        actions: [
+          if (currentUid == post.uid)
+            IconButton(
+              icon: Icon(Icons.edit_outlined, size: 20, color: colors.textSecondary),
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => _EditPostSheet(
+                  post: post,
+                  onSuccess: () => Navigator.of(context).pop(),
                 ),
-                const SizedBox(width: 4),
-                Text(
-                  '${post.likesCount}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isLiked ? AppColors.red : colors.textTertiary,
+              ),
+            ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: avatarColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Center(
+                    child: Text(
+                      displayNickname.isNotEmpty ? displayNickname[0] : '?',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: avatarColor,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        displayNickname,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colors.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        post.relativeDate,
+                        style: TextStyle(fontSize: 12, color: colors.textTertiary),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isReview
+                        ? AppColors.green.withValues(alpha: 0.12)
+                        : AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    isReview ? AppStrings.exploreFilterReview : AppStrings.exploreFilterTip,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isReview ? AppColors.green : AppColors.accent,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            if (post.itemName != null && post.itemName!.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: colors.surfaceHighlight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.timer_outlined, size: 14, color: colors.textTertiary),
+                    const SizedBox(width: 6),
+                    Text(
+                      AppStrings.exploreResistStatus(post.resisted, post.itemName ?? ''),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: post.resisted ? AppColors.blue : colors.textSecondary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 20),
+            Text(
+              post.content,
+              style: TextStyle(fontSize: 15, height: 1.8, color: colors.textPrimary),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: onLike,
+              child: Row(
+                children: [
+                  Icon(
+                    isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    size: 18,
+                    color: isLiked ? AppColors.red : colors.textTertiary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${post.likesCount}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: isLiked ? AppColors.red : colors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -583,7 +774,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
     final user = ref.read(authStateProvider).valueOrNull;
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그인 후 이용할 수 있어요')),
+        const SnackBar(content: Text(AppStrings.loginRequiredSnackbar)),
       );
       return;
     }
@@ -594,7 +785,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
       final post = CommunityPost(
         id: '',
         uid: user.uid,
-        nickname: nicknameState.nickname.isNotEmpty ? nicknameState.nickname : (user.displayName ?? '익명'),
+        nickname: nicknameState.nickname.isNotEmpty ? nicknameState.nickname : (user.displayName ?? AppStrings.anonymous),
         type: _type,
         content: _contentController.text.trim(),
         createdAt: DateTime.now(),
@@ -610,7 +801,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('등록 실패: $e')),
+          SnackBar(content: Text(AppStrings.exploreSubmitError(e))),
         );
         setState(() => _isSubmitting = false);
       }
@@ -651,7 +842,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              '어떤 이야기를 나눌까요?',
+              AppStrings.exploreWriteSheetTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -663,7 +854,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
             Row(
               children: [
                 _TypeChip(
-                  label: '후기',
+                  label: AppStrings.exploreFilterReview,
                   icon: Icons.rate_review_outlined,
                   selected: _type == PostType.review,
                   color: AppColors.green,
@@ -671,7 +862,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                 ),
                 const SizedBox(width: 10),
                 _TypeChip(
-                  label: '팁',
+                  label: AppStrings.exploreFilterTip,
                   icon: Icons.lightbulb_outline_rounded,
                   selected: _type == PostType.tip,
                   color: AppColors.accent,
@@ -683,14 +874,14 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
               const SizedBox(height: 16),
               _SheetField(
                 controller: _itemController,
-                hint: '참기 아이템 이름 (선택)',
+                hint: AppStrings.exploreItemNameHint,
                 colors: colors,
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
                   _TypeChip(
-                    label: '참았어요',
+                    label: AppStrings.exploreResisted,
                     icon: Icons.self_improvement_rounded,
                     selected: _resisted,
                     color: AppColors.blue,
@@ -698,7 +889,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                   ),
                   const SizedBox(width: 10),
                   _TypeChip(
-                    label: '샀어요',
+                    label: AppStrings.explorePurchased,
                     icon: Icons.shopping_bag_outlined,
                     selected: !_resisted,
                     color: AppColors.green,
@@ -711,8 +902,8 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
             _SheetField(
               controller: _contentController,
               hint: _type == PostType.review
-                  ? '72시간 참기 후기를 자유롭게 남겨주세요.'
-                  : '소비 습관이나 절약에 도움이 된 팁을 공유해주세요.',
+                  ? AppStrings.exploreReviewHint
+                  : AppStrings.exploreTipHint,
               colors: colors,
               maxLines: 4,
               onChanged: (_) => setState(() {}),
@@ -752,7 +943,221 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                             ),
                           )
                         : const Text(
-                            '나눔 등록',
+                            AppStrings.explorePostSubmitButton,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 글수정 바텀시트 ───────────────────────────────────────
+
+class _EditPostSheet extends ConsumerStatefulWidget {
+  const _EditPostSheet({required this.post, this.onSuccess});
+  final CommunityPost post;
+  final VoidCallback? onSuccess;
+
+  @override
+  ConsumerState<_EditPostSheet> createState() => _EditPostSheetState();
+}
+
+class _EditPostSheetState extends ConsumerState<_EditPostSheet> {
+  late PostType _type;
+  late final TextEditingController _itemController;
+  late final TextEditingController _contentController;
+  late bool _resisted;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _type = widget.post.type;
+    _itemController = TextEditingController(text: widget.post.itemName ?? '');
+    _contentController = TextEditingController(text: widget.post.content);
+    _resisted = widget.post.resisted;
+  }
+
+  @override
+  void dispose() {
+    _itemController.dispose();
+    _contentController.dispose();
+    super.dispose();
+  }
+
+  bool get _canSubmit => _contentController.text.trim().isNotEmpty && !_isSubmitting;
+
+  Future<void> _submit() async {
+    setState(() => _isSubmitting = true);
+    try {
+      await ref.read(communityRepositoryProvider).updatePost(
+        widget.post.id,
+        type: _type,
+        content: _contentController.text.trim(),
+        itemName: _type == PostType.review && _itemController.text.trim().isNotEmpty
+            ? _itemController.text.trim()
+            : null,
+        resisted: _resisted,
+      );
+      if (mounted) {
+        Navigator.of(context).pop();
+        widget.onSuccess?.call();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.exploreEditError(e))),
+        );
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 16,
+        bottom: bottomInset + 32,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colors.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              AppStrings.exploreEditSheetTitle,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                _TypeChip(
+                  label: AppStrings.exploreFilterReview,
+                  icon: Icons.rate_review_outlined,
+                  selected: _type == PostType.review,
+                  color: AppColors.green,
+                  onTap: () => setState(() => _type = PostType.review),
+                ),
+                const SizedBox(width: 10),
+                _TypeChip(
+                  label: AppStrings.exploreFilterTip,
+                  icon: Icons.lightbulb_outline_rounded,
+                  selected: _type == PostType.tip,
+                  color: AppColors.accent,
+                  onTap: () => setState(() => _type = PostType.tip),
+                ),
+              ],
+            ),
+            if (_type == PostType.review) ...[
+              const SizedBox(height: 16),
+              _SheetField(
+                controller: _itemController,
+                hint: AppStrings.exploreItemNameHint,
+                colors: colors,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _TypeChip(
+                    label: AppStrings.exploreResisted,
+                    icon: Icons.self_improvement_rounded,
+                    selected: _resisted,
+                    color: AppColors.blue,
+                    onTap: () => setState(() => _resisted = true),
+                  ),
+                  const SizedBox(width: 10),
+                  _TypeChip(
+                    label: AppStrings.explorePurchased,
+                    icon: Icons.shopping_bag_outlined,
+                    selected: !_resisted,
+                    color: AppColors.green,
+                    onTap: () => setState(() => _resisted = false),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 12),
+            _SheetField(
+              controller: _contentController,
+              hint: _type == PostType.review
+                  ? AppStrings.exploreReviewHint
+                  : AppStrings.exploreTipHint,
+              colors: colors,
+              maxLines: 4,
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: _canSubmit ? _submit : null,
+              child: AnimatedOpacity(
+                opacity: _canSubmit ? 1.0 : 0.5,
+                duration: const Duration(milliseconds: 200),
+                child: Container(
+                  height: 52,
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.accent.withValues(alpha: 0.35),
+                        blurRadius: 14,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            AppStrings.exploreEditSubmitButton,
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w600,
@@ -810,28 +1215,28 @@ class _SheetField extends StatelessWidget {
 // ── 배움 섹션 위젯 ────────────────────────────────────────
 
 const _quote = (
-  text: '지금 살 여유가 없는 것은 나중에도 살 여유가 없다.\n하지만 지금 참을 수 있다면 나중엔 더 잘 살 수 있다.',
-  author: '— 미니멀리즘 격언',
+  text: AppStrings.learnQuoteText,
+  author: AppStrings.learnQuoteAuthor,
 );
 
 const _consumptionTips = [
   (
     icon: Icons.shopping_cart_outlined,
     color: AppColors.accent,
-    title: '장바구니 24시간 방치하기',
-    body: '온라인 쇼핑몰 장바구니에 담아두고 하루가 지나도 사고 싶으면 그때 구매하세요. 충동 구매의 70%가 이 과정에서 걸러집니다.',
+    title: AppStrings.tip1Title,
+    body: AppStrings.tip1Body,
   ),
   (
     icon: Icons.receipt_long_outlined,
     color: AppColors.green,
-    title: '소비 전 "왜?"를 3번 묻기',
-    body: '"왜 사고 싶지?" → "정말 필요한가?" → "없으면 어떻게 될까?" 세 질문을 통과한 구매만이 진짜 필요한 소비입니다.',
+    title: AppStrings.tip2Title,
+    body: AppStrings.tip2Body,
   ),
   (
     icon: Icons.compare_arrows_rounded,
     color: AppColors.yellow,
-    title: '1개 사면 1개 버리기',
-    body: '새 물건을 들이기 전에 비슷한 물건을 먼저 처분하는 규칙. 소유물이 늘지 않고 물건의 가치를 더 신중히 따지게 됩니다.',
+    title: AppStrings.tip3Title,
+    body: AppStrings.tip3Body,
   ),
 ];
 
@@ -839,14 +1244,14 @@ const _minimalismTips = [
   (
     icon: Icons.home_outlined,
     color: Color(0xFF60A5FA),
-    title: '공간이 곧 자유다',
-    body: '물건이 많을수록 관리할 것도 많아집니다. 비워진 공간은 새로운 가능성을 만들어줍니다. 소유를 줄이면 마음도 가벼워집니다.',
+    title: AppStrings.minimal1Title,
+    body: AppStrings.minimal1Body,
   ),
   (
     icon: Icons.star_outline_rounded,
     color: AppColors.accent,
-    title: '품질 vs 수량',
-    body: '싼 물건 10개보다 좋은 물건 1개가 낫습니다. 자주 쓰는 물건에 투자하고, 나머지는 빌리거나 포기하는 습관을 들이세요.',
+    title: AppStrings.minimal2Title,
+    body: AppStrings.minimal2Body,
   ),
 ];
 
@@ -854,20 +1259,20 @@ const _ruleTips = [
   (
     icon: Icons.timer_outlined,
     color: AppColors.accent,
-    title: '왜 72시간인가?',
-    body: '충동구매 욕구의 피크는 처음 24시간 안에 옵니다. 72시간(3일)이 지나면 욕구가 평균 80% 이상 감소한다는 연구 결과가 있습니다.',
+    title: AppStrings.rule1Title,
+    body: AppStrings.rule1Body,
   ),
   (
     icon: Icons.psychology_outlined,
     color: AppColors.green,
-    title: '감정과 구매의 연결',
-    body: '스트레스, 지루함, 슬픔을 쇼핑으로 해소하려는 패턴을 인식하세요. 감정이 격할 때 등록한 아이템은 72시간 후 대부분 필요 없어집니다.',
+    title: AppStrings.rule2Title,
+    body: AppStrings.rule2Body,
   ),
   (
     icon: Icons.trending_up_rounded,
     color: AppColors.yellow,
-    title: '절약한 돈의 힘',
-    body: '매달 충동구매를 3번만 참아도 연간 수십만 원이 모입니다. 참을 때마다 저축 목표에 그 금액을 이체하면 동기부여가 배가됩니다.',
+    title: AppStrings.rule3Title,
+    body: AppStrings.rule3Body,
   ),
 ];
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class EmptyWaitingState extends StatelessWidget {
@@ -22,7 +23,7 @@ class EmptyWaitingState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              '오늘은 욕심이 없는 날이네요',
+              AppStrings.emptyWaitingTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w500,
@@ -32,7 +33,7 @@ class EmptyWaitingState extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              '갖고 싶은 게 생기면 + 버튼으로\n72시간 테스트를 시작해보세요',
+              AppStrings.emptyWaitingBody,
               style: TextStyle(
                 fontSize: 14,
                 color: colors.textSecondary,

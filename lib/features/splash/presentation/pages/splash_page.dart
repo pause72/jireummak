@@ -4,6 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_strings.dart';
+
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -132,7 +134,7 @@ class _SplashPageState extends State<SplashPage>
                           end: Alignment.centerRight,
                         ).createShader(bounds),
                         child: const Text(
-                          '지름막',
+                          AppStrings.appName,
                           style: TextStyle(
                             fontSize: 44,
                             fontWeight: FontWeight.w800,
@@ -151,7 +153,7 @@ class _SplashPageState extends State<SplashPage>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          '사기 전에 72시간 참기,',
+                          AppStrings.splashLine1,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
@@ -161,7 +163,7 @@ class _SplashPageState extends State<SplashPage>
                         ),
                         SizedBox(height: 4),
                         Text(
-                          '진짜 필요한지 생각해보세요',
+                          AppStrings.splashLine2,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w400,

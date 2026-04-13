@@ -32,12 +32,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<UserModel> signInWithNaver() async {
-    final credential = await _datasource.signInWithNaver();
-    return _mapFirebaseUser(credential.user)!;
-  }
-
-  @override
   Future<UserModel> signInWithKakao() async {
     final credential = await _datasource.signInWithKakao();
     return _mapFirebaseUser(credential.user)!;

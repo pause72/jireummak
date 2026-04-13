@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 import 'core/ads/interstitial_ad_service.dart';
 import 'core/constants/social_auth_config.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/theme_provider.dart';
 import 'firebase_options.dart';
 
@@ -19,6 +20,7 @@ void main() async {
   // 카카오 SDK 초기화
   KakaoSdk.init(nativeAppKey: SocialAuthConfig.kakaoNativeAppKey);
   await MobileAds.instance.initialize();
+  await NotificationService().initialize();
   InterstitialAdService.instance.load();
   final prefs = await SharedPreferences.getInstance();
   runApp(
