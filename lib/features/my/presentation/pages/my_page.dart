@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -11,7 +12,26 @@ import '../../../../features/auth/presentation/providers/auth_provider.dart';
 import '../../../../features/explore/presentation/pages/explore_page.dart';
 import '../../../../features/home/domain/models/wish_stats.dart';
 import '../../../../features/home/presentation/providers/wish_item_provider.dart';
+import '../../domain/models/savings_goal.dart';
 import '../providers/nickname_provider.dart';
+import '../providers/notification_settings_provider.dart';
+import '../providers/savings_goal_provider.dart';
+
+// 만원/억원 단위로 축약 (예: 12,340,000 → 1,234만원)
+String _shortAmount(int amount) {
+  if (amount <= 0) return '0원';
+  if (amount >= 100000000) {
+    final eok = amount / 100000000;
+    final str = eok % 1 == 0 ? eok.toInt().toString() : eok.toStringAsFixed(1);
+    return '$str억원';
+  }
+  if (amount >= 10000) {
+    final man = amount / 10000;
+    final str = man % 1 == 0 ? man.toInt().toString() : man.toStringAsFixed(1);
+    return '$str만원';
+  }
+  return '$amount원';
+}
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -37,11 +57,12 @@ class MyPage extends ConsumerWidget {
               _ProfileCard(
                 user: user,
                 nicknameState: nicknameState,
+                stats: stats,
                 onEditNickname: () => _showNicknameEditDialog(context, ref, nicknameState),
                 onLoginTap: () => context.go('/login'),
               ),
               const SizedBox(height: 16),
-              _StatsSummaryCard(stats: stats),
+              _GoalAndStatsCard(stats: stats),
               const SizedBox(height: 24),
               _SectionTitle(AppStrings.myLearning, colors: colors),
               const SizedBox(height: 10),
@@ -60,16 +81,7 @@ class MyPage extends ConsumerWidget {
               const SizedBox(height: 24),
               _SectionTitle(AppStrings.mySettings, colors: colors),
               const SizedBox(height: 10),
-              _SettingsGroup(
-                colors: colors,
-                items: [
-                  _SettingsItem(
-                    icon: Icons.notifications_none_rounded,
-                    label: AppStrings.myNotificationSettings,
-                    onTap: () {},
-                  ),
-                ],
-              ),
+              _NotificationToggleCard(colors: colors),
               const SizedBox(height: 12),
               const _ThemeToggleCard(),
               const SizedBox(height: 24),
@@ -139,19 +151,9 @@ class MyPage extends ConsumerWidget {
   }
 
   void _showNicknameEditDialog(BuildContext context, WidgetRef ref, NicknameState nicknameState) {
-    if (!nicknameState.canChange) return;
-    final controller = TextEditingController();
-    final colors = context.colors;
-
     showDialog<void>(
       context: context,
-      builder: (ctx) => _NicknameEditDialog(
-        controller: controller,
-        colors: colors,
-        onConfirm: (nick) async {
-          return ref.read(nicknameNotifierProvider.notifier).setNickname(nick);
-        },
-      ),
+      builder: (ctx) => const _NicknameEditDialog(),
     );
   }
 
@@ -182,99 +184,179 @@ class MyPage extends ConsumerWidget {
   }
 }
 
-class _StatsSummaryCard extends StatelessWidget {
-  const _StatsSummaryCard({required this.stats});
+// ── 목표 + 통계 통합 카드 ─────────────────────────────────
+
+class _GoalAndStatsCard extends ConsumerWidget {
+  const _GoalAndStatsCard({required this.stats});
   final WishStats stats;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final goals = ref.watch(savingsGoalNotifierProvider);
+    final savedAmount = stats.savedAmount.toInt();
     final colors = context.colors;
+    final hasGoal = goals.isNotEmpty;
+    final goal = hasGoal ? goals.first : null;
+    final progress = (goal != null && goal.targetAmount > 0)
+        ? (savedAmount / goal.targetAmount).clamp(0.0, 1.0)
+        : 0.0;
+    final isReached = progress >= 1.0;
 
     return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [colors.gradStart, colors.gradEnd],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colors.gradStart, colors.gradEnd],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  AppStrings.myTotalSaved,
-                  style: TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w500, letterSpacing: 0.4),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  stats.savedAmount == 0 ? '₩ 0원' : stats.formattedSaved,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: colors.textPrimary, letterSpacing: -0.3),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                _SummaryItem(label: AppStrings.myResisted, value: '${stats.cancelledCount}번', color: AppColors.blue),
-                _Divider(),
-                _SummaryItem(label: AppStrings.myPurchased, value: '${stats.purchasedCount}번', color: AppColors.green),
-                _Divider(),
-                _SummaryItem(label: AppStrings.myTotalRegistered, value: '${stats.totalCount}개', color: AppColors.accent),
-              ],
-            ),
-            if (stats.decidedCount > 0) ...[
-              const SizedBox(height: 16),
-              Divider(color: AppColors.accent.withValues(alpha: 0.2), height: 1),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    AppStrings.myResistanceRate,
-                    style: TextStyle(fontSize: 12, color: colors.textSecondary),
-                  ),
-                  Text(
-                    '${(stats.saveRate * 100).toStringAsFixed(0)}%',
-                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.accent),
-                  ),
-                ],
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── 절약 목표 헤더 ──────────────────────────────
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppStrings.mySavingsGoalSection,
+                style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w600, letterSpacing: 0.5),
               ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: stats.saveRate,
-                  minHeight: 6,
-                  backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-                  valueColor: const AlwaysStoppedAnimation(AppColors.accent),
+              GestureDetector(
+                onTap: hasGoal
+                    ? () => _showUpdateDialog(context, ref, goal!)
+                    : () => _showAddDialog(context, ref),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(hasGoal ? Icons.edit_rounded : Icons.add_rounded, size: 11, color: AppColors.accent),
+                      const SizedBox(width: 3),
+                      Text(hasGoal ? '수정' : '추가', style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w500)),
+                    ],
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+
+          // ── 목표 콘텐츠 ─────────────────────────────────
+          if (!hasGoal)
+            GestureDetector(
+              onTap: () => _showAddDialog(context, ref),
+              child: Text('+ 목표를 설정해보세요 🎯', style: TextStyle(fontSize: 13, color: colors.textTertiary)),
+            )
+          else ...[
+            // 목표명 + 달성률
+            Row(
+              children: [
+                Text(goal!.emoji, style: const TextStyle(fontSize: 18)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(goal.title, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary), overflow: TextOverflow.ellipsis),
+                ),
+                const SizedBox(width: 8),
+                if (isReached)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(color: AppColors.green.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                    child: const Text(AppStrings.mySavingsGoalReached, style: TextStyle(fontSize: 10, color: AppColors.green, fontWeight: FontWeight.w700)),
+                  )
+                else
+                  Text('${(progress * 100).toStringAsFixed(0)}%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: isReached ? AppColors.green : AppColors.accent)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            // 진행 바
+            ClipRRect(
+              borderRadius: BorderRadius.circular(6),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 7,
+                backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+                valueColor: AlwaysStoppedAnimation(isReached ? AppColors.green : AppColors.accent),
+              ),
+            ),
+            const SizedBox(height: 10),
+            // 절약 / 목표 금액
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(_shortAmount(savedAmount), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
+                    Text('절약', style: TextStyle(fontSize: 10, color: colors.textTertiary)),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(_shortAmount(goal.targetAmount), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textSecondary)),
+                    Text('목표', style: TextStyle(fontSize: 10, color: colors.textTertiary)),
+                  ],
+                ),
+              ],
+            ),
           ],
-        ),
+
+          // ── 구분선 ──────────────────────────────────────
+          const SizedBox(height: 16),
+          Divider(color: AppColors.accent.withValues(alpha: 0.2), height: 1),
+          const SizedBox(height: 14),
+
+          // ── 참음 / 구매 / 등록 통계 행 ─────────────────
+          Row(
+            children: [
+              _SummaryItem(label: AppStrings.myResisted, value: '${stats.cancelledCount}번', color: AppColors.blue),
+              _Divider(),
+              _SummaryItem(label: AppStrings.myPurchased, value: '${stats.purchasedCount}번', color: AppColors.green),
+              _Divider(),
+              _SummaryItem(label: AppStrings.myTotalRegistered, value: '${stats.totalCount}개', color: AppColors.accent),
+            ],
+          ),
+
+        ],
+      ),
     );
+  }
+
+  void _showAddDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(context: context, builder: (_) => _AddGoalDialog(onAdd: (goal) => ref.read(savingsGoalNotifierProvider.notifier).add(goal)));
+  }
+
+  void _showUpdateDialog(BuildContext context, WidgetRef ref, SavingsGoal goal) {
+    showDialog<void>(context: context, builder: (_) => _UpdateGoalDialog(
+      goal: goal,
+      onUpdate: (updated) => ref.read(savingsGoalNotifierProvider.notifier).update(updated),
+      onDelete: () => ref.read(savingsGoalNotifierProvider.notifier).delete(goal.id),
+    ));
   }
 }
 
-// ── 프로필 카드 ───────────────────────────────────────────
+// ── 프로필 히어로 섹션 ─────────────────────────────────────
 
 class _ProfileCard extends StatelessWidget {
   const _ProfileCard({
     required this.user,
     required this.nicknameState,
+    required this.stats,
     required this.onEditNickname,
     required this.onLoginTap,
   });
 
   final UserModel? user;
   final NicknameState nicknameState;
+  final WishStats stats;
   final VoidCallback onEditNickname;
   final VoidCallback onLoginTap;
 
@@ -295,15 +377,15 @@ class _ProfileCard extends StatelessWidget {
           child: Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: colors.surfaceHighlight,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.person_outline, color: colors.inactive, size: 26),
+                child: Icon(Icons.person_outline, color: colors.inactive, size: 28),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -321,9 +403,11 @@ class _ProfileCard extends StatelessWidget {
       );
     }
 
+    final nickname = nicknameState.nickname.isNotEmpty ? nicknameState.nickname : AppStrings.loading;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [colors.gradStart, colors.gradEnd],
@@ -333,109 +417,148 @@ class _ProfileCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          // 아바타
+          // ── 아바타 (그라디언트 링)
           Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
+            width: 76,
+            height: 76,
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.accent, width: 2),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.accent.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                ),
-              ],
+              gradient: LinearGradient(
+                colors: [AppColors.accent, AppColors.yellow],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
             ),
+            padding: const EdgeInsets.all(2.5),
             child: ClipOval(
               child: user!.photoUrl != null
                   ? Image.network(
                       user!.photoUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _defaultAvatarContent(colors),
+                      errorBuilder: (_, _, _) => _defaultAvatar(colors),
                     )
-                  : _defaultAvatarContent(colors),
+                  : _defaultAvatar(colors),
             ),
           ),
-          const SizedBox(width: 14),
-          // 닉네임 + 이메일
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        nicknameState.nickname.isNotEmpty ? nicknameState.nickname : AppStrings.loading,
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    if (nicknameState.isLoading)
-                      const SizedBox(
-                        width: 12,
-                        height: 12,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
-                      )
-                    else if (nicknameState.canChange)
-                      GestureDetector(
-                        onTap: onEditNickname,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppColors.accent.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: const Icon(Icons.edit_rounded, size: 12, color: AppColors.accent),
-                        ),
-                      ),
-                  ],
+          const SizedBox(height: 12),
+          // ── 닉네임 + 수정 아이콘
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (nicknameState.isLoading)
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+                )
+              else
+                Flexible(
+                  child: Text(
+                    nickname,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: colors.textPrimary),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  user!.email,
-                  style: TextStyle(fontSize: 11, color: colors.textTertiary),
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (nicknameState.canChange) ...[
-                  const SizedBox(height: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onEditNickname,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: AppColors.accent.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
+                      color: nicknameState.canChange
+                          ? AppColors.accent.withValues(alpha: 0.15)
+                          : Colors.transparent,
+                      shape: BoxShape.circle,
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.diversity_3_rounded, size: 11, color: AppColors.accent),
-                        const SizedBox(width: 4),
-                        Text(
-                          AppStrings.myNicknameHint,
-                          style: TextStyle(fontSize: 10, color: AppColors.accent, fontWeight: FontWeight.w600),
-                        ),
-                      ],
+                    child: Icon(
+                      Icons.edit_rounded,
+                      size: 13,
+                      color: nicknameState.canChange ? AppColors.accent : colors.inactive,
                     ),
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          // ── 이메일
+          Text(
+            user!.email,
+            style: TextStyle(fontSize: 11, color: colors.textTertiary),
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 20),
+          Divider(height: 1, color: AppColors.accent.withValues(alpha: 0.15)),
+          const SizedBox(height: 16),
+          // ── 한 줄 스탯
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _HeroStat(
+                emoji: '🛡',
+                value: '${stats.cancelledCount}번',
+                label: '참았어요',
+                colors: colors,
+              ),
+              Container(width: 1, height: 32, color: AppColors.accent.withValues(alpha: 0.2)),
+              _HeroStat(
+                emoji: '🔥',
+                value: stats.decidedCount == 0
+                    ? '—'
+                    : '${(stats.saveRate * 100).toStringAsFixed(0)}%',
+                label: '충동구매 저항률',
+                colors: colors,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _defaultAvatarContent(AppColors colors) {
+  Widget _defaultAvatar(AppColors colors) {
     return Container(
       color: colors.surfaceHighlight,
-      child: Icon(Icons.person_outline, color: colors.inactive, size: 26),
+      child: Icon(Icons.person_outline, color: colors.inactive, size: 30),
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  const _HeroStat({
+    required this.emoji,
+    required this.value,
+    required this.label,
+    required this.colors,
+  });
+
+  final String emoji;
+  final String value;
+  final String label;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text(
+              value,
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: colors.textPrimary),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text(label, style: TextStyle(fontSize: 10, color: colors.textTertiary)),
+      ],
     );
   }
 }
@@ -552,6 +675,48 @@ class _SettingsItem extends StatelessWidget {
               Icon(Icons.chevron_right, size: 18, color: colors.inactive),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _NotificationToggleCard extends ConsumerWidget {
+  const _NotificationToggleCard({required this.colors});
+
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final enabled = ref.watch(notificationSettingsNotifierProvider);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colors.border),
+      ),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
+      child: Row(
+        children: [
+          Icon(
+            enabled ? Icons.notifications_active_rounded : Icons.notifications_off_outlined,
+            size: 20,
+            color: enabled ? AppColors.accent : colors.textTertiary,
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              AppStrings.myNotificationSettings,
+              style: TextStyle(fontSize: 14, color: colors.textPrimary),
+            ),
+          ),
+          Switch.adaptive(
+            value: enabled,
+            activeColor: AppColors.accent,
+            onChanged: (v) =>
+                ref.read(notificationSettingsNotifierProvider.notifier).setEnabled(v),
+          ),
+        ],
       ),
     );
   }
@@ -815,35 +980,37 @@ class _LearnDetailPage extends StatelessWidget {
 
 // ── 닉네임 변경 다이얼로그 ─────────────────────────────────
 
-class _NicknameEditDialog extends StatefulWidget {
-  const _NicknameEditDialog({
-    required this.controller,
-    required this.colors,
-    required this.onConfirm,
-  });
-
-  final TextEditingController controller;
-  final AppColors colors;
-  final Future<String?> Function(String) onConfirm;
+class _NicknameEditDialog extends ConsumerStatefulWidget {
+  const _NicknameEditDialog();
 
   @override
-  State<_NicknameEditDialog> createState() => _NicknameEditDialogState();
+  ConsumerState<_NicknameEditDialog> createState() => _NicknameEditDialogState();
 }
 
-class _NicknameEditDialogState extends State<_NicknameEditDialog> {
+class _NicknameEditDialogState extends ConsumerState<_NicknameEditDialog> {
+  final _controller = TextEditingController();
   String? _errorMessage;
   bool _isLoading = false;
 
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
   Future<void> _submit() async {
-    final nick = widget.controller.text.trim();
-    if (nick.isEmpty) return;
+    final nick = _controller.text.trim();
+    if (nick.isEmpty) {
+      setState(() => _errorMessage = '닉네임을 입력해주세요.');
+      return;
+    }
 
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
 
-    final error = await widget.onConfirm(nick);
+    final error = await ref.read(nicknameNotifierProvider.notifier).setNickname(nick);
 
     if (!mounted) return;
 
@@ -859,7 +1026,9 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = widget.colors;
+    final colors = context.colors;
+    final nicknameState = ref.watch(nicknameNotifierProvider);
+    final canChange = nicknameState.canChange;
 
     return AlertDialog(
       backgroundColor: colors.surface,
@@ -870,45 +1039,36 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            AppStrings.nicknameChangeWarning,
-            style: TextStyle(color: colors.textSecondary, fontSize: 13),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: widget.controller,
-            autofocus: true,
-            maxLength: 20,
-            style: TextStyle(color: colors.textPrimary, fontSize: 14),
-            onSubmitted: (_) => _submit(),
-            decoration: InputDecoration(
-              hintText: AppStrings.nicknameInputHint,
-              hintStyle: TextStyle(color: colors.textTertiary),
-              errorText: _errorMessage,
-              filled: true,
-              fillColor: colors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: colors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: colors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.accent),
-              ),
-              errorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.red),
-              ),
-              focusedErrorBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: AppColors.red),
-              ),
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            canChange ? '30일에 한 번 변경할 수 있어요.' : '${nicknameState.daysUntilNextChange}일 후에 변경할 수 있어요.',
+            style: TextStyle(
+              color: canChange ? colors.textSecondary : AppColors.yellow,
+              fontSize: 13,
             ),
           ),
+          if (canChange) ...[
+            const SizedBox(height: 12),
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              maxLength: 20,
+              style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              onSubmitted: (_) => _isLoading ? null : _submit(),
+              decoration: InputDecoration(
+                hintText: AppStrings.nicknameInputHint,
+                hintStyle: TextStyle(color: colors.textTertiary),
+                errorText: _errorMessage,
+                filled: true,
+                fillColor: colors.background,
+                counterText: '',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.accent)),
+                errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+                focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              ),
+            ),
+          ],
         ],
       ),
       actions: [
@@ -916,17 +1076,318 @@ class _NicknameEditDialogState extends State<_NicknameEditDialog> {
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
           child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
         ),
-        TextButton(
-          onPressed: _isLoading ? null : _submit,
-          child: _isLoading
-              ? const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
-                )
-              : const Text(AppStrings.nicknameChangeButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+        if (canChange)
+          TextButton(
+            onPressed: _isLoading ? null : _submit,
+            child: _isLoading
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent))
+                : const Text(AppStrings.nicknameChangeButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
         ),
       ],
+    );
+  }
+}
+
+
+
+// ── 저축 목표 추가 다이얼로그 ─────────────────────────────
+
+const _kGoalEmojis = ['🏠', '✈️', '🚗', '📱', '💍', '🎓', '💻', '🌴', '🎯', '💰', '👜', '🏋️'];
+
+class _AddGoalDialog extends StatefulWidget {
+  const _AddGoalDialog({required this.onAdd});
+  final void Function(SavingsGoal) onAdd;
+
+  @override
+  State<_AddGoalDialog> createState() => _AddGoalDialogState();
+}
+
+class _AddGoalDialogState extends State<_AddGoalDialog> {
+  final _titleController = TextEditingController();
+  final _amountController = TextEditingController();
+  String _selectedEmoji = '🎯';
+  String? _titleError;
+  String? _amountError;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final title = _titleController.text.trim();
+    final amountStr = _amountController.text.trim().replaceAll(',', '');
+    final amount = int.tryParse(amountStr);
+
+    setState(() {
+      _titleError = title.isEmpty ? AppStrings.mySavingsGoalTitleRequired : null;
+      _amountError = (amount == null || amount <= 0) ? AppStrings.mySavingsGoalAmountRequired : null;
+    });
+
+    if (_titleError != null || _amountError != null) return;
+
+    final goal = SavingsGoal(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      title: title,
+      targetAmount: amount!,
+      emoji: _selectedEmoji,
+    );
+    widget.onAdd(goal);
+    Navigator.of(context).pop();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return AlertDialog(
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(AppStrings.mySavingsGoalAddTitle, style: TextStyle(color: colors.textPrimary, fontSize: 16)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Emoji picker
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _kGoalEmojis.map((e) {
+                final selected = e == _selectedEmoji;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedEmoji = e),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: selected ? AppColors.accent.withValues(alpha: 0.15) : colors.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? AppColors.accent : colors.border,
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Center(child: Text(e, style: const TextStyle(fontSize: 18))),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 14),
+            // Title field
+            TextField(
+              controller: _titleController,
+              autofocus: true,
+              maxLength: 20,
+              style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalTitleHint, _titleError),
+            ),
+            const SizedBox(height: 8),
+            // Target amount field
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              onSubmitted: (_) => _submit(),
+              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalAmountHint, _amountError,
+                  suffix: '원'),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
+        ),
+        TextButton(
+          onPressed: _submit,
+          child: const Text(AppStrings.mySavingsGoalAddButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration(AppColors colors, String hint, String? error, {String? suffix}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: colors.textTertiary, fontSize: 13),
+      errorText: error,
+      suffixText: suffix,
+      suffixStyle: TextStyle(color: colors.textSecondary, fontSize: 14),
+      filled: true,
+      fillColor: colors.background,
+      counterText: '',
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.accent)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    );
+  }
+}
+
+// ── 목표 수정 다이얼로그 ─────────────────────────────────
+
+class _UpdateGoalDialog extends StatefulWidget {
+  const _UpdateGoalDialog({
+    required this.goal,
+    required this.onUpdate,
+    required this.onDelete,
+  });
+  final SavingsGoal goal;
+  final void Function(SavingsGoal) onUpdate;
+  final VoidCallback onDelete;
+
+  @override
+  State<_UpdateGoalDialog> createState() => _UpdateGoalDialogState();
+}
+
+class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
+  late final TextEditingController _titleController;
+  late final TextEditingController _amountController;
+  late String _selectedEmoji;
+  String? _titleError;
+  String? _amountError;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.goal.title);
+    _amountController = TextEditingController(text: widget.goal.targetAmount.toString());
+    _selectedEmoji = widget.goal.emoji;
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _amountController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final title = _titleController.text.trim();
+    final amount = int.tryParse(_amountController.text.trim());
+
+    setState(() {
+      _titleError = title.isEmpty ? AppStrings.mySavingsGoalTitleRequired : null;
+      _amountError = (amount == null || amount <= 0) ? AppStrings.mySavingsGoalAmountRequired : null;
+    });
+
+    if (_titleError != null || _amountError != null) return;
+
+    widget.onUpdate(widget.goal.copyWith(
+      title: title,
+      targetAmount: amount!,
+      emoji: _selectedEmoji,
+    ));
+    Navigator.of(context).pop();
+  }
+
+  void _confirmDelete() {
+    Navigator.of(context).pop();
+    widget.onDelete();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return AlertDialog(
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(AppStrings.mySavingsGoalEditTitle, style: TextStyle(color: colors.textPrimary, fontSize: 16)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Emoji picker
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _kGoalEmojis.map((e) {
+                final selected = e == _selectedEmoji;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedEmoji = e),
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: selected ? AppColors.accent.withValues(alpha: 0.15) : colors.background,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: selected ? AppColors.accent : colors.border,
+                        width: selected ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Center(child: Text(e, style: const TextStyle(fontSize: 18))),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 14),
+            TextField(
+              controller: _titleController,
+              maxLength: 20,
+              style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalTitleHint, _titleError),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _amountController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              onSubmitted: (_) => _submit(),
+              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalAmountHint, _amountError, suffix: '원'),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: _confirmDelete,
+              child: Center(
+                child: Text(
+                  AppStrings.mySavingsGoalDeleteButton,
+                  style: const TextStyle(fontSize: 12, color: AppColors.red),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
+        ),
+        TextButton(
+          onPressed: _submit,
+          child: const Text(AppStrings.mySavingsGoalUpdateButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration(AppColors colors, String hint, String? error, {String? suffix}) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: colors.textTertiary, fontSize: 13),
+      errorText: error,
+      suffixText: suffix,
+      suffixStyle: TextStyle(color: colors.textSecondary, fontSize: 14),
+      filled: true,
+      fillColor: colors.background,
+      counterText: '',
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.accent)),
+      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     );
   }
 }

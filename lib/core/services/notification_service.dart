@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -17,114 +18,127 @@ class NotificationService {
   static const _channelName = AppStrings.notifChannelName;
   static const _channelDesc = AppStrings.notifChannelDesc;
 
-  // 정확한 알람 권한 캐시 — initialize() 후 결정됨
+  // TODO: 테스트 완료 후 false로 변경
+  static const _testMode = false;
+
   bool _canExact = false;
 
   Future<void> initialize() async {
+    // ── 타임존 초기화 (기기의 실제 로컬 타임존 설정) ──────
     tz.initializeTimeZones();
+    try {
+      final timeZoneName = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      debugPrint('[NotificationService] 타임존: $timeZoneName');
+    } catch (e) {
+      debugPrint('[NotificationService] 타임존 설정 실패, UTC 사용: $e');
+    }
 
+    // ── Android 초기화 ─────────────────────────────────────
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    // ── iOS 초기화 (포그라운드 알림 표시 포함) ───────────────
     const ios = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      // 포그라운드에서도 알림 표시
+      defaultPresentAlert: true,
+      defaultPresentBadge: true,
+      defaultPresentSound: true,
     );
 
     await _plugin.initialize(
       const InitializationSettings(android: android, iOS: ios),
+      onDidReceiveNotificationResponse: (details) {
+        debugPrint('[NotificationService] 알림 탭: ${details.payload}');
+      },
     );
 
-    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
-
-    if (androidImpl != null) {
-      // Android 13+ 알림 권한 요청
-      await androidImpl.requestNotificationsPermission();
-
-      // Android 12+ 정확한 알람 권한 요청 (설정 화면으로 이동)
-      // 사용자가 거부해도 inexact 모드로 폴백하므로 결과는 무시
-      await androidImpl.requestExactAlarmsPermission();
-
-      // 실제 권한 부여 여부 확인 후 캐시
-      _canExact =
-          await androidImpl.canScheduleExactNotifications() ?? false;
+    // ── iOS 권한 명시적 요청 ──────────────────────────────
+    final iosImpl = _plugin.resolvePlatformSpecificImplementation<
+        IOSFlutterLocalNotificationsPlugin>();
+    if (iosImpl != null) {
+      final granted = await iosImpl.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      debugPrint('[NotificationService] iOS 알림 권한: $granted');
     }
 
-    debugPrint('[NotificationService] 정확한 알람 권한: $_canExact');
+    // ── Android 권한 요청 ─────────────────────────────────
+    final androidImpl = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImpl != null) {
+      await androidImpl.requestNotificationsPermission();
+      await androidImpl.requestExactAlarmsPermission();
+      _canExact =
+          await androidImpl.canScheduleExactNotifications() ?? false;
+      debugPrint('[NotificationService] 정확한 알람 권한: $_canExact');
+    }
   }
 
-  // itemId 기반으로 충돌 없는 알림 ID 생성 (offset: 0=24h, 1=48h, 2=72h)
-  int _notificationId(String itemId, int offset) =>
-      (itemId.hashCode.abs() % 333333) * 10 + offset;
+  // itemId 기반으로 충돌 없는 알림 ID 생성
+  int _notificationId(String itemId) => itemId.hashCode.abs() % 999999;
 
   Future<void> scheduleWishNotifications(WishItem item) async {
-    final milestones = [
-      (
-        offset: 0,
-        delay: const Duration(hours: 24),
-        title: AppStrings.notif24hTitle,
-        body: AppStrings.notif24hBody(item.name),
-      ),
-      (
-        offset: 1,
-        delay: const Duration(hours: 48),
-        title: AppStrings.notif48hTitle,
-        body: AppStrings.notif48hBody(item.name),
-      ),
-      (
-        offset: 2,
-        delay: const Duration(hours: 72),
-        title: AppStrings.notif72hTitle,
-        body: AppStrings.notif72hBody(item.name),
-      ),
-    ];
+    // 프로덕션: 72h / 테스트: 1m
+    final delay = _testMode
+        ? const Duration(minutes: 1)
+        : const Duration(hours: 72);
 
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
+    final details = NotificationDetails(
+      android: const AndroidNotificationDetails(
         _channelId,
         _channelName,
         channelDescription: _channelDesc,
-        importance: Importance.high,
+        importance: Importance.max,
         priority: Priority.high,
+        playSound: true,
       ),
-      iOS: DarwinNotificationDetails(),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      ),
     );
 
-    // 권한 있으면 정확한 알람, 없으면 inexact 폴백 (72h 타이머는 몇 분 오차 허용)
     final scheduleMode = _canExact
         ? AndroidScheduleMode.exactAllowWhileIdle
         : AndroidScheduleMode.inexactAllowWhileIdle;
 
     final now = tz.TZDateTime.now(tz.local);
+    final targetTime = item.createdAt.add(delay);
+    final scheduledAt = tz.TZDateTime.from(targetTime, tz.local);
 
-    for (final m in milestones) {
-      final scheduledAt = tz.TZDateTime.from(
-        item.createdAt.add(m.delay),
-        tz.local,
+    debugPrint('[NotificationService] 현재 시각(local): $now');
+
+    if (scheduledAt.isBefore(now)) {
+      debugPrint('[NotificationService] 스킵 (이미 지남): $scheduledAt');
+      return;
+    }
+
+    try {
+      await _plugin.zonedSchedule(
+        _notificationId(item.id),
+        AppStrings.notif72hTitle,
+        AppStrings.notif72hBody(item.name),
+        scheduledAt,
+        details,
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        payload: item.id,
       );
-      if (scheduledAt.isBefore(now)) continue; // 이미 지난 시간은 스킵
-
-      try {
-        await _plugin.zonedSchedule(
-          _notificationId(item.id, m.offset),
-          m.title,
-          m.body,
-          scheduledAt,
-          details,
-          androidScheduleMode: scheduleMode,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
-          payload: item.id,
-        );
-      } catch (e) {
-        debugPrint('[NotificationService] 알림 예약 실패: $e');
-      }
+      debugPrint('[NotificationService] ✅ 예약 완료 → $scheduledAt');
+    } catch (e) {
+      debugPrint('[NotificationService] ❌ 예약 실패: $e');
     }
   }
 
   Future<void> cancelWishNotifications(String itemId) async {
-    await _plugin.cancel(_notificationId(itemId, 0));
-    await _plugin.cancel(_notificationId(itemId, 1));
-    await _plugin.cancel(_notificationId(itemId, 2));
+    await _plugin.cancel(_notificationId(itemId));
+    debugPrint('[NotificationService] 취소 완료: $itemId');
   }
 }

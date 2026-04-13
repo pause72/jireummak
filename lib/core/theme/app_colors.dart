@@ -52,14 +52,14 @@ class AppColors {
   );
 
   static const AppColors light = AppColors._(
-    background: Color(0xFFF0F4FB),   // 라이트 블루 그레이
+    background: Color(0xFFF5F2EE),   // 따뜻한 오프화이트
     surface: Color(0xFFFFFFFF),
-    surface2: Color(0xFFE6EDF8),
-    surfaceHighlight: Color(0xFFD8E4F4),
-    gradStart: Color(0xFFDEEAFB),
-    gradEnd: Color(0xFFC8DAEF),
-    border: Color(0xFFCAD7EC),
-    borderLight: Color(0xFFDDE6F4),
+    surface2: Color(0xFFECE8E2),
+    surfaceHighlight: Color(0xFFE6E0D8),
+    gradStart: Color(0xFFEDE8DF),
+    gradEnd: Color(0xFFDDD7CE),
+    border: Color(0xFFD5CDBF),
+    borderLight: Color(0xFFE4DED5),
     textPrimary: Color(0xFF1A2535),
     textSecondary: Color(0xFF4A6080),
     textTertiary: Color(0xFF8099B8),

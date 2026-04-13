@@ -165,7 +165,7 @@ class _SaveRateCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+         Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('충동구매 저항률', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.textPrimary)),

@@ -74,7 +74,7 @@ final clockTickProvider = AutoDisposeStreamProvider<DateTime>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ClockTickRef = AutoDisposeStreamProviderRef<DateTime>;
-String _$wishItemNotifierHash() => r'5dc71cc26ba02ecda13e6ce6bd84864e741a51f2';
+String _$wishItemNotifierHash() => r'2e2b00a04a5162ab245e1d40d2cd98bbff993a96';
 
 /// See also [WishItemNotifier].
 @ProviderFor(WishItemNotifier)
