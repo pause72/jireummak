@@ -178,6 +178,13 @@ class NicknameNotifier extends _$NicknameNotifier {
     } on _DuplicateNicknameException {
       state = state.copyWith(isLoading: false);
       return '이미 사용 중인 닉네임이에요.';
+    } on FirebaseException catch (e) {
+      debugPrint('[NicknameNotifier] setNickname failed: $e');
+      state = state.copyWith(isLoading: false);
+      if (e.code == 'permission-denied') {
+        return '변경 권한이 없어요. 다시 로그인 후 시도해 주세요.';
+      }
+      return '오류가 발생했어요. 다시 시도해 주세요.';
     } catch (e) {
       debugPrint('[NicknameNotifier] setNickname failed: $e');
       state = state.copyWith(isLoading: false);

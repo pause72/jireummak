@@ -33,6 +33,23 @@ String _shortAmount(int amount) {
   return '$amount원';
 }
 
+String _levelBadge(int resistedCount) {
+  if (resistedCount >= 50) return '🏆 Lv.5 절약마스터';
+  if (resistedCount >= 20) return '💎 Lv.4 절약왕';
+  if (resistedCount >= 10) return '🔥 Lv.3 참기고수';
+  if (resistedCount >= 5)  return '💪 Lv.2 절약러';
+  return '🌱 Lv.1 절약 입문';
+}
+
+String _progressFeedback(double progress) {
+  if (progress >= 1.0) return '목표 달성! 🏆';
+  if (progress >= 0.9) return '마지막 고비예요 ✨';
+  if (progress >= 0.6) return '거의 다 왔어요 🔥';
+  if (progress >= 0.3) return '잘 하고 있어요 💪';
+  if (progress >= 0.1) return '좋은 출발이에요 👍';
+  return '아직 시작이에요 🚀';
+}
+
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
 
@@ -256,7 +273,7 @@ class _GoalAndStatsCard extends ConsumerWidget {
               child: Text('+ 목표를 설정해보세요 🎯', style: TextStyle(fontSize: 13, color: colors.textTertiary)),
             )
           else ...[
-            // 목표명 + 달성률
+            // 목표명
             Row(
               children: [
                 Text(goal!.emoji, style: const TextStyle(fontSize: 18)),
@@ -270,12 +287,32 @@ class _GoalAndStatsCard extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(color: AppColors.green.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
                     child: const Text(AppStrings.mySavingsGoalReached, style: TextStyle(fontSize: 10, color: AppColors.green, fontWeight: FontWeight.w700)),
-                  )
-                else
-                  Text('${(progress * 100).toStringAsFixed(0)}%', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: isReached ? AppColors.green : AppColors.accent)),
+                  ),
               ],
             ),
             const SizedBox(height: 10),
+            // 절약 금액 강조
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '💰 ${_shortAmount(savedAmount)} 절약',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                    ),
+                    Text('목표 ${_shortAmount(goal.targetAmount)}', style: TextStyle(fontSize: 11, color: colors.textTertiary)),
+                  ],
+                ),
+                Text(
+                  '${(progress * 100).toStringAsFixed(0)}%',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: isReached ? AppColors.green : AppColors.accent),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             // 진행 바
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
@@ -286,26 +323,11 @@ class _GoalAndStatsCard extends ConsumerWidget {
                 valueColor: AlwaysStoppedAnimation(isReached ? AppColors.green : AppColors.accent),
               ),
             ),
-            const SizedBox(height: 10),
-            // 절약 / 목표 금액
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(_shortAmount(savedAmount), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: colors.textPrimary)),
-                    Text('절약', style: TextStyle(fontSize: 10, color: colors.textTertiary)),
-                  ],
-                ),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(_shortAmount(goal.targetAmount), style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: colors.textSecondary)),
-                    Text('목표', style: TextStyle(fontSize: 10, color: colors.textTertiary)),
-                  ],
-                ),
-              ],
+            const SizedBox(height: 6),
+            // 진행률 피드백 문구
+            Text(
+              _progressFeedback(progress),
+              style: TextStyle(fontSize: 12, color: isReached ? AppColors.green : AppColors.accent, fontWeight: FontWeight.w500),
             ),
           ],
 
@@ -317,11 +339,11 @@ class _GoalAndStatsCard extends ConsumerWidget {
           // ── 참음 / 구매 / 등록 통계 행 ─────────────────
           Row(
             children: [
-              _SummaryItem(label: AppStrings.myResisted, value: '${stats.cancelledCount}번', color: AppColors.blue),
+              _SummaryItem(label: '참기 성공', value: '💪 ${stats.cancelledCount}번', color: AppColors.blue),
               _Divider(),
-              _SummaryItem(label: AppStrings.myPurchased, value: '${stats.purchasedCount}번', color: AppColors.green),
+              _SummaryItem(label: '구매', value: '😅 ${stats.purchasedCount}번', color: AppColors.green),
               _Divider(),
-              _SummaryItem(label: AppStrings.myTotalRegistered, value: '${stats.totalCount}개', color: AppColors.accent),
+              _SummaryItem(label: '도전', value: '📦 ${stats.totalCount}개', color: AppColors.accent),
             ],
           ),
 
@@ -491,26 +513,38 @@ class _ProfileCard extends StatelessWidget {
             style: TextStyle(fontSize: 11, color: colors.textTertiary),
             overflow: TextOverflow.ellipsis,
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
+          // ── 레벨 뱃지
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              _levelBadge(stats.cancelledCount),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent),
+            ),
+          ),
+          const SizedBox(height: 16),
           Divider(height: 1, color: AppColors.accent.withValues(alpha: 0.15)),
           const SizedBox(height: 16),
-          // ── 한 줄 스탯
+          // ── 성과 스탯
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _HeroStat(
-                emoji: '🛡',
+                emoji: '🔥',
                 value: '${stats.cancelledCount}번',
-                label: '참았어요',
+                label: '참기 성공',
                 colors: colors,
               ),
               Container(width: 1, height: 32, color: AppColors.accent.withValues(alpha: 0.2)),
               _HeroStat(
-                emoji: '🔥',
-                value: stats.decidedCount == 0
-                    ? '—'
-                    : '${(stats.saveRate * 100).toStringAsFixed(0)}%',
-                label: '충동구매 저항률',
+                emoji: '💰',
+                value: stats.savedAmount > 0 ? _shortAmount(stats.savedAmount.toInt()) : '—',
+                label: '충동구매 방어',
                 colors: colors,
               ),
             ],
@@ -705,14 +739,24 @@ class _NotificationToggleCard extends ConsumerWidget {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              AppStrings.myNotificationSettings,
-              style: TextStyle(fontSize: 14, color: colors.textPrimary),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppStrings.myNotificationSettings,
+                  style: TextStyle(fontSize: 14, color: colors.textPrimary),
+                ),
+                Text(
+                  AppStrings.myNotificationSubtitle,
+                  style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                ),
+              ],
             ),
           ),
           Switch.adaptive(
             value: enabled,
-            activeColor: AppColors.accent,
+            activeThumbColor: AppColors.accent,
+            activeTrackColor: AppColors.accent.withValues(alpha: 0.5),
             onChanged: (v) =>
                 ref.read(notificationSettingsNotifierProvider.notifier).setEnabled(v),
           ),

@@ -70,7 +70,7 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
     super.dispose();
   }
 
-  void _showContextMenu(BuildContext context, {Offset? globalPosition}) {
+  Future<void> _showContextMenu(BuildContext context, {Offset? globalPosition}) async {
     final colors = context.colors;
     final overlay = Overlay.of(context).context.findRenderObject()! as RenderBox;
 
@@ -80,7 +80,7 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
       Offset.zero & overlay.size,
     );
 
-    showMenu<String>(
+    final value = await showMenu<String>(
       context: context,
       position: position,
       color: colors.surface,
@@ -113,11 +113,11 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
           ),
         ),
       ],
-    ).then((value) {
-      if (!mounted) return;
-      if (value == 'edit') _showEditSheet(context);
-      if (value == 'delete') _confirmDelete(context);
-    });
+    );
+
+    if (!mounted) return;
+    if (value == 'edit') _showEditSheet(this.context);
+    if (value == 'delete') _confirmDelete(this.context);
   }
 
   void _showEditSheet(BuildContext context) {
@@ -250,27 +250,38 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          if (item.price != null)
+                            Padding(
+                              // ··· 버튼 공간 확보
+                              padding: EdgeInsets.only(right: expired ? 0 : 20),
+                              child: Text(
+                                item.formattedPrice,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: colors.textPrimary,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
                           Padding(
-                            // ··· 버튼 공간 확보
-                            padding: EdgeInsets.only(right: expired ? 0 : 20),
+                            padding: EdgeInsets.only(
+                              top: item.price != null ? 2 : 0,
+                              // 가격 없을 때만 이름에 ··· 공간 확보
+                              right: (item.price == null && !expired) ? 20 : 0,
+                            ),
                             child: Text(
                               item.name,
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: colors.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                                color: colors.textSecondary,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          if (item.price != null) ...[
-                            const SizedBox(height: 3),
-                            Text(
-                              item.formattedPrice,
-                              style: TextStyle(fontSize: 13, color: colors.textSecondary),
-                            ),
-                          ],
                           if (item.reason != null) ...[
                             const SizedBox(height: 4),
                             Row(
@@ -281,8 +292,8 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
                                   child: Text(
                                     item.reason!,
                                     style: TextStyle(
-                                      fontSize: 13,
-                                      color: colors.textSecondary,
+                                      fontSize: 12,
+                                      color: colors.textTertiary,
                                       fontStyle: FontStyle.italic,
                                     ),
                                     maxLines: 1,
@@ -690,7 +701,7 @@ class _GradientProgressBarState extends State<_GradientProgressBar>
             expired: widget.expired,
             borderColor: widget.borderColor,
           ),
-          child: const SizedBox(height: 12, width: double.infinity),
+          child: const SizedBox(height: 6, width: double.infinity),
         );
       },
     );
@@ -715,7 +726,7 @@ class _PastelFlowPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
     final filledW = (w * value).clamp(0.0, w);
-    const radius = Radius.circular(6);
+    const radius = Radius.circular(3);
 
     canvas.drawRRect(
       RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, w, h), radius),

@@ -80,7 +80,7 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),
             activeIcon: Icon(Icons.explore),
-            label: '나눔',
+            label: '공유',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),

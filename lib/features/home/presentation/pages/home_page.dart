@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,6 +13,15 @@ import '../../data/local/wish_image_local_store.dart';
 import '../providers/wish_item_provider.dart';
 import '../widgets/empty_waiting_state.dart';
 import '../widgets/wish_item_card.dart';
+
+const _motivationalMessages = [
+  '72시간 후엔 마음이 달라져 있을 거예요 🌱',
+  '참는 것도 연습이에요. 잘 하고 있어요 ✨',
+  '지금 이 참음이 나중의 여유가 돼요 💰',
+  '충동을 이겼어요. 대단해요! 🎉',
+  '현명한 소비를 선택했어요 💪',
+  '3일 후 다시 물어볼게요. 그때도 사고 싶으면 그때 사요 😊',
+];
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -27,7 +37,22 @@ class HomePage extends ConsumerWidget {
       body: SafeArea(
         child: items.isEmpty
             ? const EmptyWaitingState()
-            : ListView.builder(
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
+                    child: Text(
+                      '지금 ${items.length}개를 참고 있어요 💪',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: colors.textTertiary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
                 itemCount: items.length + 1,
                 itemBuilder: (_, i) {
@@ -36,7 +61,7 @@ class HomePage extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Center(
                         child: Text(
-                          '잘 참고 있어요 🌿\n더 추가하고 싶은 게 있다면 72시간 참기 버튼을 눌러보세요',
+                          '잘 참고 있어요 🌿\n더 추가하고 싶은 게 있다면 참기 시작하기 버튼을 눌러보세요',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -52,12 +77,17 @@ class HomePage extends ConsumerWidget {
                     child: WishItemCard(item: items[i], isFirst: i == 0),
                   );
                 },
+                    ),
+                  ),
+                ],
               ),
       ),
     );
   }
 
   void _showAddItemSheet(BuildContext context, WidgetRef ref) {
+    final messenger = ScaffoldMessenger.of(context);
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -65,16 +95,57 @@ class HomePage extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => _AddItemSheet(ref: ref),
+      builder: (ctx) => _AddItemSheet(
+        ref: ref,
+        onCompleted: () => _handleAddCompleted(messenger),
+      ),
     );
+  }
+
+  void _handleAddCompleted(ScaffoldMessengerState messenger) {
+    // 1. "좋은 선택이에요" 피드백
+    messenger.showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Text('좋은 선택이에요 💪', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            SizedBox(width: 6),
+            Text('72시간 참기가 시작됩니다', style: TextStyle(fontSize: 13)),
+          ],
+        ),
+        duration: const Duration(milliseconds: 1200),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+      ),
+    );
+
+    // 2. 1초 후 광고 → 광고 끝나면 동기부여 메시지
+    Future.delayed(const Duration(seconds: 1), () {
+      InterstitialAdService.instance.show(
+        onDismissed: () {
+          final msg = _motivationalMessages[Random().nextInt(_motivationalMessages.length)];
+          messenger.showSnackBar(
+            SnackBar(
+              content: Text(msg, style: const TextStyle(fontSize: 13)),
+              duration: const Duration(seconds: 3),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+            ),
+          );
+        },
+      );
+    });
   }
 }
 
 
 class _AddItemSheet extends StatefulWidget {
-  const _AddItemSheet({required this.ref});
+  const _AddItemSheet({required this.ref, this.onCompleted});
 
   final WidgetRef ref;
+  final VoidCallback? onCompleted;
 
   @override
   State<_AddItemSheet> createState() => _AddItemSheetState();
@@ -142,7 +213,7 @@ class _AddItemSheetState extends State<_AddItemSheet> {
 
   Future<void> _submit() async {
     final name = _nameController.text.trim();
-    final price = double.tryParse(_priceController.text.trim());
+    final price = double.tryParse(_priceController.text.trim().replaceAll(',', ''));
 
     final nameError = name.isEmpty ? AppStrings.homeItemNameRequired : null;
     final priceError = price == null ? AppStrings.homePriceRequired : null;
@@ -154,6 +225,55 @@ class _AddItemSheetState extends State<_AddItemSheet> {
       });
       return;
     }
+
+    // 확인 단계
+    if (!mounted) return;
+    final colors = context.colors;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          AppStrings.homeConfirmTitle,
+          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              name,
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: colors.textPrimary),
+            ),
+            if (price != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                '₩ ${_formatComma(price.toInt())}원',
+                style: TextStyle(fontSize: 13, color: colors.textSecondary),
+              ),
+            ],
+            const SizedBox(height: 14),
+            Text(
+              AppStrings.homeConfirmBody,
+              style: TextStyle(fontSize: 13, color: colors.textSecondary, height: 1.6),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text(AppStrings.homeConfirmButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
 
     setState(() => _isSubmitting = true);
 
@@ -175,8 +295,18 @@ class _AddItemSheetState extends State<_AddItemSheet> {
           reason: reason.isNotEmpty ? reason : null,
         );
 
+    widget.onCompleted?.call();
     if (mounted) Navigator.of(context).pop();
-    InterstitialAdService.instance.show();
+  }
+
+  static String _formatComma(int n) {
+    final s = n.toString();
+    final buf = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
   }
 
   @override
@@ -216,7 +346,11 @@ class _AddItemSheetState extends State<_AddItemSheet> {
             controller: _priceController,
             hint: AppStrings.homePriceHint,
             keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              _PriceCommaFormatter(),
+            ],
+            prefixText: '₩  ',
             errorText: _priceError,
             onChanged: (_) { if (_priceError != null) setState(() => _priceError = null); },
           ),
@@ -346,6 +480,7 @@ class _Field extends StatelessWidget {
     this.autofocus = false,
     this.maxLength,
     this.inputFormatters,
+    this.prefixText,
     this.errorText,
     this.onChanged,
   });
@@ -356,6 +491,7 @@ class _Field extends StatelessWidget {
   final bool autofocus;
   final int? maxLength;
   final List<TextInputFormatter>? inputFormatters;
+  final String? prefixText;
   final String? errorText;
   final ValueChanged<String>? onChanged;
 
@@ -375,6 +511,8 @@ class _Field extends StatelessWidget {
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: colors.inactive),
+        prefixText: prefixText,
+        prefixStyle: TextStyle(fontSize: 15, color: colors.textSecondary),
         errorText: errorText,
         errorStyle: const TextStyle(fontSize: 12),
         filled: true,
@@ -451,5 +589,29 @@ class _AddFab extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _PriceCommaFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue newVal) {
+    final digits = newVal.text.replaceAll(',', '');
+    if (digits.isEmpty) return newVal.copyWith(text: '');
+    final n = int.tryParse(digits);
+    if (n == null) return old;
+    final formatted = _addCommas(n.toString());
+    return newVal.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
+    );
+  }
+
+  String _addCommas(String s) {
+    final buf = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+      buf.write(s[i]);
+    }
+    return buf.toString();
   }
 }
