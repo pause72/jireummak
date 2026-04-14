@@ -79,13 +79,23 @@ class AppStrings {
   static const exploreLoadError = '불러오기 실패';
   static const exploreWriteSheetTitle = '어떤 이야기를 나눌까요?';
   static const exploreEditSheetTitle = '나눔 수정';
-  static const exploreItemNameHint = '참기 아이템 이름 (선택)';
-  static const exploreResisted = '참았어요';
-  static const explorePurchased = '샀어요';
-  static const exploreReviewHint = '72시간 참기 후기를 자유롭게 남겨주세요.';
+  static const exploreItemNameHint = '어떤 걸 참았나요? (선택)';
+  static const exploreItemNameExample = '예: 발뮤다 토스터기';
+  static const exploreResisted = '참았어요 💪';
+  static const explorePurchased = '결국 샀어요 😅';
+  static const exploreReviewHint = '왜 사고 싶었나요?\n72시간 동안 어떤 생각이 들었나요?\n결과는 어땠나요?';
   static const exploreTipHint = '소비 습관이나 절약에 도움이 된 팁을 공유해주세요.';
-  static const explorePostSubmitButton = '나눔 등록';
+  static const explorePostSubmitButton = '내 경험 나누기';
   static const exploreEditSubmitButton = '수정 완료';
+  static const exploreWriteReviewTitle = '72시간 버틴 이야기, 들려주세요 💪';
+  static const exploreWriteTipTitle = '다른 사람에게 도움이 될 팁을 알려주세요 💡';
+  static const exploreSubmitSuccess = '좋은 경험을 나눠주셔서 감사해요 🙌';
+  static const exploreHelpOthers = '이 글이 다른 사람의 참기에 도움이 됩니다';
+  static const exploreMenuEdit = '수정';
+  static const exploreMenuDelete = '삭제';
+  static const exploreDeleteTitle = '게시글을 삭제할까요?';
+  static const exploreDeleteBody = '이 글에 달린 공감도 함께 사라집니다.\n삭제 후에는 되돌릴 수 없어요.';
+  static const exploreDeleteConfirm = '삭제';
 
   // dynamic
   static String exploreResistStatus(bool resisted, String itemName) =>

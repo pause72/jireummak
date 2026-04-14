@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "304393749591",
-    "project_id": "pause72-31936",
-    "storage_bucket": "pause72-31936.firebasestorage.app"
+    "project_number": "884745183528",
+    "project_id": "jireummak",
+    "storage_bucket": "jireummak.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:304393749591:android:5302f6e090cdd33a548f12",
+        "mobilesdk_app_id": "1:884745183528:android:2a5296df5cf347b70bf01d",
         "android_client_info": {
-          "package_name": "com.pause72.pause72"
+          "package_name": "com.pause72.jireummak"
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDdUU7wnXXbkNXy7Z9Z55Mh0iuIPyURiYU"
+          "current_key": "AIzaSyACDipjfFnEv8chvkrCh7xhJzkBpNUuWIk"
         }
       ],
       "services": {

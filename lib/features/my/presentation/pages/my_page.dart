@@ -81,7 +81,7 @@ class MyPage extends ConsumerWidget {
               const SizedBox(height: 16),
               _GoalAndStatsCard(stats: stats),
               const SizedBox(height: 24),
-              _SectionTitle(AppStrings.myLearning, colors: colors),
+              //_SectionTitle(AppStrings.myLearning, colors: colors),
               const SizedBox(height: 10),
               _SettingsGroup(
                 colors: colors,
@@ -291,43 +291,90 @@ class _GoalAndStatsCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 10),
-            // 절약 금액 강조
+            // 절약 금액 + 원형 퍼센트
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '💰 ${_shortAmount(savedAmount)} 절약',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: colors.textPrimary),
+                      '💰 ${_shortAmount(savedAmount)} 아꼈어요',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w800,
+                        color: savedAmount > 0 ? AppColors.green : colors.textPrimary,
+                      ),
                     ),
-                    Text('목표 ${_shortAmount(goal.targetAmount)}', style: TextStyle(fontSize: 11, color: colors.textTertiary)),
+                    const SizedBox(height: 2),
+                    Text(
+                      '목표 ${_shortAmount(goal.targetAmount)}',
+                      style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                    ),
                   ],
                 ),
-                Text(
-                  '${(progress * 100).toStringAsFixed(0)}%',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: isReached ? AppColors.green : AppColors.accent),
+                SizedBox(
+                  width: 54,
+                  height: 54,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CircularProgressIndicator(
+                        value: progress,
+                        strokeWidth: 5,
+                        backgroundColor: AppColors.accent.withValues(alpha: 0.15),
+                        valueColor: AlwaysStoppedAnimation(isReached ? AppColors.green : AppColors.accent),
+                      ),
+                      Text(
+                        '${(progress * 100).toStringAsFixed(0)}%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: isReached ? AppColors.green : AppColors.accent,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            // 진행 바
-            ClipRRect(
-              borderRadius: BorderRadius.circular(6),
-              child: LinearProgressIndicator(
-                value: progress,
-                minHeight: 7,
-                backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-                valueColor: AlwaysStoppedAnimation(isReached ? AppColors.green : AppColors.accent),
-              ),
+            const SizedBox(height: 12),
+            // 진행 바 (gradient)
+            Stack(
+              children: [
+                Container(
+                  height: 7,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                ),
+                FractionallySizedBox(
+                  widthFactor: progress.clamp(0.0, 1.0),
+                  child: Container(
+                    height: 7,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isReached
+                            ? [AppColors.green, const Color(0xFF34D399)]
+                            : [AppColors.accent, AppColors.green],
+                      ),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 6),
             // 진행률 피드백 문구
             Text(
               _progressFeedback(progress),
-              style: TextStyle(fontSize: 12, color: isReached ? AppColors.green : AppColors.accent, fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 12,
+                color: isReached ? AppColors.green : AppColors.accent,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
 
@@ -336,15 +383,36 @@ class _GoalAndStatsCard extends ConsumerWidget {
           Divider(color: AppColors.accent.withValues(alpha: 0.2), height: 1),
           const SizedBox(height: 14),
 
-          // ── 참음 / 구매 / 등록 통계 행 ─────────────────
-          Row(
-            children: [
-              _SummaryItem(label: '참기 성공', value: '💪 ${stats.cancelledCount}번', color: AppColors.blue),
-              _Divider(),
-              _SummaryItem(label: '구매', value: '😅 ${stats.purchasedCount}번', color: AppColors.green),
-              _Divider(),
-              _SummaryItem(label: '도전', value: '📦 ${stats.totalCount}개', color: AppColors.accent),
-            ],
+          // ── 참음 / 구매 / 등록 통계 (스토리형) ─────────
+          Center(
+            child: RichText(
+              textAlign: TextAlign.center,
+              text: TextSpan(
+                style: TextStyle(fontSize: 13, height: 1.5),
+                children: [
+                  TextSpan(
+                    text: '💪 ${stats.cancelledCount}번 참고',
+                    style: const TextStyle(color: AppColors.green, fontWeight: FontWeight.w600),
+                  ),
+                  TextSpan(
+                    text: '  ·  ',
+                    style: TextStyle(color: colors.textTertiary),
+                  ),
+                  TextSpan(
+                    text: '😅 ${stats.purchasedCount}번 사고',
+                    style: TextStyle(color: AppColors.yellow, fontWeight: FontWeight.w600),
+                  ),
+                  TextSpan(
+                    text: '  ·  ',
+                    style: TextStyle(color: colors.textTertiary),
+                  ),
+                  TextSpan(
+                    text: '📦 ${stats.totalCount}번 도전 중',
+                    style: const TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
           ),
 
         ],
@@ -597,33 +665,6 @@ class _HeroStat extends StatelessWidget {
   }
 }
 
-class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({required this.label, required this.value, required this.color});
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Expanded(
-      child: Column(
-        children: [
-          Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: color), textAlign: TextAlign.center),
-          const SizedBox(height: 3),
-          Text(label, style: TextStyle(fontSize: 10, color: colors.textTertiary), textAlign: TextAlign.center),
-        ],
-      ),
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 28, color: context.colors.border);
-  }
-}
 
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle(this.title, {required this.colors});
@@ -1137,6 +1178,37 @@ class _NicknameEditDialogState extends ConsumerState<_NicknameEditDialog> {
 // ── 저축 목표 추가 다이얼로그 ─────────────────────────────
 
 const _kGoalEmojis = ['🏠', '✈️', '🚗', '📱', '💍', '🎓', '💻', '🌴', '🎯', '💰', '👜', '🏋️'];
+const _kGoalSuggestions = ['내집마련', '여행', '차 구매', '노트북', '결혼'];
+
+InputDecoration _goalInputDecoration(AppColors colors, String hint, String? error, {String? prefix}) {
+  return InputDecoration(
+    hintText: hint,
+    hintStyle: TextStyle(color: colors.textTertiary, fontSize: 13),
+    errorText: error,
+    prefixText: prefix,
+    prefixStyle: TextStyle(color: colors.textPrimary, fontSize: 14, fontWeight: FontWeight.w500),
+    filled: true,
+    fillColor: colors.background,
+    counterText: '',
+    border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+    enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
+    focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.accent)),
+    errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+    focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
+    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+  );
+}
+
+String _commaFormat(int n) {
+  if (n <= 0) return '';
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  return buf.toString();
+}
 
 class _AddGoalDialog extends StatefulWidget {
   const _AddGoalDialog({required this.onAdd});
@@ -1160,85 +1232,102 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
     super.dispose();
   }
 
+  void _addAmount(int delta) {
+    final current = int.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
+    final updated = current + delta;
+    _amountController.text = _commaFormat(updated);
+    _amountController.selection = TextSelection.collapsed(offset: _amountController.text.length);
+    setState(() => _amountError = null);
+  }
+
   void _submit() {
     final title = _titleController.text.trim();
-    final amountStr = _amountController.text.trim().replaceAll(',', '');
-    final amount = int.tryParse(amountStr);
-
+    final amount = int.tryParse(_amountController.text.replaceAll(',', ''));
     setState(() {
       _titleError = title.isEmpty ? AppStrings.mySavingsGoalTitleRequired : null;
       _amountError = (amount == null || amount <= 0) ? AppStrings.mySavingsGoalAmountRequired : null;
     });
-
     if (_titleError != null || _amountError != null) return;
-
-    final goal = SavingsGoal(
+    widget.onAdd(SavingsGoal(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
       targetAmount: amount!,
       emoji: _selectedEmoji,
-    );
-    widget.onAdd(goal);
+    ));
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final amountVal = int.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
 
     return AlertDialog(
       backgroundColor: colors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(AppStrings.mySavingsGoalAddTitle, style: TextStyle(color: colors.textPrimary, fontSize: 16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      title: Text(
+        '어떤 목표를 위해 참을까요?',
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary, height: 1.3),
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Emoji picker
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _kGoalEmojis.map((e) {
-                final selected = e == _selectedEmoji;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedEmoji = e),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: selected ? AppColors.accent.withValues(alpha: 0.15) : colors.background,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: selected ? AppColors.accent : colors.border,
-                        width: selected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Center(child: Text(e, style: const TextStyle(fontSize: 18))),
-                  ),
-                );
-              }).toList(),
+            _GoalEmojiPicker(
+              selected: _selectedEmoji,
+              onSelect: (e) => setState(() => _selectedEmoji = e),
+              colors: colors,
             ),
-            const SizedBox(height: 14),
-            // Title field
+            const SizedBox(height: 10),
+            _GoalSuggestionChips(
+              onSelect: (s) {
+                _titleController.text = s;
+                setState(() => _titleError = null);
+              },
+              colors: colors,
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _titleController,
               autofocus: true,
               maxLength: 20,
               style: TextStyle(color: colors.textPrimary, fontSize: 14),
-              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalTitleHint, _titleError),
+              onChanged: (_) { if (_titleError != null) setState(() => _titleError = null); },
+              decoration: _goalInputDecoration(colors, '예: 내집마련, 여행가기, 아이폰 구매', _titleError),
             ),
             const SizedBox(height: 8),
-            // Target amount field
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly, _GoalAmountFormatter()],
               style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              onChanged: (_) {
+                if (_amountError != null) setState(() => _amountError = null);
+                setState(() {});
+              },
               onSubmitted: (_) => _submit(),
-              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalAmountHint, _amountError,
-                  suffix: '원'),
+              decoration: _goalInputDecoration(colors, '목표 금액', _amountError, prefix: '₩ '),
             ),
+            const SizedBox(height: 8),
+            _QuickAmountChips(onAdd: _addAmount, colors: colors),
+            if (amountVal > 0) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '이 목표를 위해 소비를 줄여보세요 💪',
+                  style: TextStyle(fontSize: 12, color: AppColors.green, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -1249,28 +1338,9 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
         ),
         TextButton(
           onPressed: _submit,
-          child: const Text(AppStrings.mySavingsGoalAddButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+          child: const Text('목표 설정하기', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
         ),
       ],
-    );
-  }
-
-  InputDecoration _inputDecoration(AppColors colors, String hint, String? error, {String? suffix}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: colors.textTertiary, fontSize: 13),
-      errorText: error,
-      suffixText: suffix,
-      suffixStyle: TextStyle(color: colors.textSecondary, fontSize: 14),
-      filled: true,
-      fillColor: colors.background,
-      counterText: '',
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.accent)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
     );
   }
 }
@@ -1302,7 +1372,7 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
   void initState() {
     super.initState();
     _titleController = TextEditingController(text: widget.goal.title);
-    _amountController = TextEditingController(text: widget.goal.targetAmount.toString());
+    _amountController = TextEditingController(text: _commaFormat(widget.goal.targetAmount));
     _selectedEmoji = widget.goal.emoji;
   }
 
@@ -1313,22 +1383,23 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
     super.dispose();
   }
 
+  void _addAmount(int delta) {
+    final current = int.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
+    final updated = current + delta;
+    _amountController.text = _commaFormat(updated);
+    _amountController.selection = TextSelection.collapsed(offset: _amountController.text.length);
+    setState(() => _amountError = null);
+  }
+
   void _submit() {
     final title = _titleController.text.trim();
-    final amount = int.tryParse(_amountController.text.trim());
-
+    final amount = int.tryParse(_amountController.text.replaceAll(',', ''));
     setState(() {
       _titleError = title.isEmpty ? AppStrings.mySavingsGoalTitleRequired : null;
       _amountError = (amount == null || amount <= 0) ? AppStrings.mySavingsGoalAmountRequired : null;
     });
-
     if (_titleError != null || _amountError != null) return;
-
-    widget.onUpdate(widget.goal.copyWith(
-      title: title,
-      targetAmount: amount!,
-      emoji: _selectedEmoji,
-    ));
+    widget.onUpdate(widget.goal.copyWith(title: title, targetAmount: amount!, emoji: _selectedEmoji));
     Navigator.of(context).pop();
   }
 
@@ -1340,63 +1411,73 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final amountVal = int.tryParse(_amountController.text.replaceAll(',', '')) ?? 0;
 
     return AlertDialog(
       backgroundColor: colors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(AppStrings.mySavingsGoalEditTitle, style: TextStyle(color: colors.textPrimary, fontSize: 16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+      contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      title: Text(
+        '목표를 수정할까요?',
+        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary),
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Emoji picker
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: _kGoalEmojis.map((e) {
-                final selected = e == _selectedEmoji;
-                return GestureDetector(
-                  onTap: () => setState(() => _selectedEmoji = e),
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: selected ? AppColors.accent.withValues(alpha: 0.15) : colors.background,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: selected ? AppColors.accent : colors.border,
-                        width: selected ? 1.5 : 1,
-                      ),
-                    ),
-                    child: Center(child: Text(e, style: const TextStyle(fontSize: 18))),
-                  ),
-                );
-              }).toList(),
+            _GoalEmojiPicker(
+              selected: _selectedEmoji,
+              onSelect: (e) => setState(() => _selectedEmoji = e),
+              colors: colors,
             ),
             const SizedBox(height: 14),
             TextField(
               controller: _titleController,
               maxLength: 20,
               style: TextStyle(color: colors.textPrimary, fontSize: 14),
-              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalTitleHint, _titleError),
+              onChanged: (_) { if (_titleError != null) setState(() => _titleError = null); },
+              decoration: _goalInputDecoration(colors, '예: 내집마련, 여행가기', _titleError),
             ),
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
               keyboardType: TextInputType.number,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly, _GoalAmountFormatter()],
               style: TextStyle(color: colors.textPrimary, fontSize: 14),
+              onChanged: (_) {
+                if (_amountError != null) setState(() => _amountError = null);
+                setState(() {});
+              },
               onSubmitted: (_) => _submit(),
-              decoration: _inputDecoration(colors, AppStrings.mySavingsGoalAmountHint, _amountError, suffix: '원'),
+              decoration: _goalInputDecoration(colors, '목표 금액', _amountError, prefix: '₩ '),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
+            _QuickAmountChips(onAdd: _addAmount, colors: colors),
+            if (amountVal > 0) ...[
+              const SizedBox(height: 10),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.green.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  '이 목표를 위해 소비를 줄여보세요 💪',
+                  style: TextStyle(fontSize: 12, color: AppColors.green, fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            // 삭제 (하단, 약하게)
             GestureDetector(
               onTap: _confirmDelete,
               child: Center(
                 child: Text(
                   AppStrings.mySavingsGoalDeleteButton,
-                  style: const TextStyle(fontSize: 12, color: AppColors.red),
+                  style: TextStyle(fontSize: 11, color: colors.textTertiary, decoration: TextDecoration.underline),
                 ),
               ),
             ),
@@ -1410,28 +1491,141 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
         ),
         TextButton(
           onPressed: _submit,
-          child: const Text(AppStrings.mySavingsGoalUpdateButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+          child: const Text('목표 업데이트', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
         ),
       ],
     );
   }
+}
 
-  InputDecoration _inputDecoration(AppColors colors, String hint, String? error, {String? suffix}) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: TextStyle(color: colors.textTertiary, fontSize: 13),
-      errorText: error,
-      suffixText: suffix,
-      suffixStyle: TextStyle(color: colors.textSecondary, fontSize: 14),
-      filled: true,
-      fillColor: colors.background,
-      counterText: '',
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: colors.border)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.accent)),
-      errorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
-      focusedErrorBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AppColors.red)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+// ── 목표 설정 공유 헬퍼 위젯 ──────────────────────────────
+
+class _GoalEmojiPicker extends StatelessWidget {
+  const _GoalEmojiPicker({required this.selected, required this.onSelect, required this.colors});
+  final String selected;
+  final ValueChanged<String> onSelect;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: _kGoalEmojis.map((e) {
+        final isSelected = e == selected;
+        return GestureDetector(
+          onTap: () => onSelect(e),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            width: isSelected ? 44 : 40,
+            height: isSelected ? 44 : 40,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? AppColors.accent.withValues(alpha: 0.18)
+                  : colors.background,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected ? AppColors.accent : colors.border,
+                width: isSelected ? 2 : 1,
+              ),
+              boxShadow: isSelected
+                  ? [BoxShadow(color: AppColors.accent.withValues(alpha: 0.28), blurRadius: 8, offset: const Offset(0, 2))]
+                  : null,
+            ),
+            child: Center(
+              child: Text(e, style: TextStyle(fontSize: isSelected ? 22 : 18)),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _GoalSuggestionChips extends StatelessWidget {
+  const _GoalSuggestionChips({required this.onSelect, required this.colors});
+  final ValueChanged<String> onSelect;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      children: _kGoalSuggestions.map((s) {
+        return GestureDetector(
+          onTap: () => onSelect(s),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: colors.background,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: colors.border),
+            ),
+            child: Text(s, style: TextStyle(fontSize: 12, color: colors.textSecondary)),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _QuickAmountChips extends StatelessWidget {
+  const _QuickAmountChips({required this.onAdd, required this.colors});
+  final ValueChanged<int> onAdd;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _AmountChip(label: '+100만', amount: 1000000, onAdd: onAdd),
+        const SizedBox(width: 6),
+        _AmountChip(label: '+500만', amount: 5000000, onAdd: onAdd),
+        const SizedBox(width: 6),
+        _AmountChip(label: '+1000만', amount: 10000000, onAdd: onAdd),
+      ],
+    );
+  }
+}
+
+class _AmountChip extends StatelessWidget {
+  const _AmountChip({required this.label, required this.amount, required this.onAdd});
+  final String label;
+  final int amount;
+  final ValueChanged<int> onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => onAdd(amount),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w600),
+        ),
+      ),
+    );
+  }
+}
+
+class _GoalAmountFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue old, TextEditingValue newVal) {
+    final digits = newVal.text.replaceAll(',', '');
+    if (digits.isEmpty) return newVal.copyWith(text: '');
+    final n = int.tryParse(digits);
+    if (n == null) return old;
+    final formatted = _commaFormat(n);
+    return newVal.copyWith(
+      text: formatted,
+      selection: TextSelection.collapsed(offset: formatted.length),
     );
   }
 }

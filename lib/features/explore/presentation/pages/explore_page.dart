@@ -245,20 +245,25 @@ class _WriteFab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 22),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: fabColors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: shadowColor.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: shadowColor.withValues(alpha: 0.55),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: shadowColor.withValues(alpha: 0.20),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -454,14 +459,17 @@ class _MotivationBanner extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            AppColors.accent.withValues(alpha: context.isDark ? 0.18 : 0.08),
-            AppColors.green.withValues(alpha: context.isDark ? 0.14 : 0.06),
+            AppColors.accent.withValues(alpha: context.isDark ? 0.30 : 0.14),
+            AppColors.green.withValues(alpha: context.isDark ? 0.22 : 0.10),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -520,7 +528,7 @@ class _StatItem extends StatelessWidget {
             Text(
               '$value',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: colors.textPrimary,
                 height: 1.1,
@@ -579,8 +587,6 @@ class _PostCard extends ConsumerWidget {
         ? nicknameAsync.value!
         : post.nickname;
 
-    final accentColor = isReview ? const Color(0xFFD97706) : AppColors.green;
-
     return GestureDetector(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
@@ -593,171 +599,296 @@ class _PostCard extends ConsumerWidget {
           ),
         ),
       ),
-      child: DecoratedBox(
+      child: Container(
         decoration: BoxDecoration(
+          color: colors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: colors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: context.isDark ? 0.20 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(15.5),
-          child: ColoredBox(
-            color: colors.surface,
-            child: IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Left accent bar
-                  Container(width: 3, color: accentColor),
-                  // Card content
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header: avatar + nickname + badge
-                          Row(
-                            children: [
-                              Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: avatarColor.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(17),
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    displayNickname.isNotEmpty ? displayNickname[0] : '?',
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w700,
-                                      color: avatarColor,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      displayNickname,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.textPrimary,
-                                      ),
-                                    ),
-                                    Text(
-                                      post.relativeDate,
-                                      style: TextStyle(fontSize: 11, color: colors.textTertiary),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: accentColor.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Text(
-                                  isReview ? '📖 후기' : '💡 팁',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w600,
-                                    color: accentColor,
-                                  ),
-                                ),
-                              ),
-                              if (currentUid == post.uid) ...[
-                                const SizedBox(width: 6),
-                                GestureDetector(
-                                  onTap: () => showModalBottomSheet<void>(
-                                    context: context,
-                                    isScrollControlled: true,
-                                    backgroundColor: Colors.transparent,
-                                    builder: (_) => _EditPostSheet(post: post),
-                                  ),
-                                  child: Icon(Icons.edit_outlined, size: 16, color: colors.textTertiary),
-                                ),
-                              ],
-                            ],
-                          ),
-                          // Item name chip
-                          if (post.itemName != null && post.itemName!.isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: colors.surfaceHighlight,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.timer_outlined, size: 13, color: colors.textTertiary),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    AppStrings.exploreResistStatus(post.resisted, post.itemName ?? ''),
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: post.resisted ? AppColors.blue : colors.textSecondary,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          // Content
-                          const SizedBox(height: 10),
-                          Text(
-                            post.content,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(fontSize: 14, height: 1.6, color: colors.textPrimary),
-                          ),
-                          // Like button
-                          const SizedBox(height: 12),
-                          GestureDetector(
-                            onTap: onLike,
-                            child: Row(
-                              children: [
-                                AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 200),
-                                  child: Icon(
-                                    isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                                    key: ValueKey(isLiked),
-                                    size: 16,
-                                    color: isLiked ? AppColors.red : colors.textTertiary,
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                Text(
-                                  AppStrings.exploreLikeLabel(post.likesCount),
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: isLiked ? FontWeight.w600 : FontWeight.w400,
-                                    color: isLiked ? AppColors.red : colors.textTertiary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Headline: 타입별 핵심 한 줄
+            if (isReview)
+              _ReviewHeadline(post: post, colors: colors)
+            else
+              _TipBadge(colors: colors),
+            const SizedBox(height: 10),
+            // ── Author
+            Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: avatarColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Center(
+                    child: Text(
+                      displayNickname.isNotEmpty ? displayNickname[0] : '?',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: avatarColor,
                       ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    displayNickname,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: colors.textSecondary,
+                    ),
+                  ),
+                ),
+                Text(
+                  post.relativeDate,
+                  style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                ),
+                if (currentUid == post.uid) ...[
+                  const SizedBox(width: 4),
+                  _PostMoreButton(
+                    post: post,
+                    colors: colors,
+                    onEdit: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (_) => _EditPostSheet(post: post),
+                    ),
+                    onDelete: () => _confirmDeletePost(context, ref, post.id),
+                  ),
+                ],
+              ],
+            ),
+            // ── Content
+            const SizedBox(height: 10),
+            Text(
+              post.content,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(fontSize: 14, height: 1.6, color: colors.textPrimary),
+            ),
+            // ── Like
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: onLike,
+              child: Row(
+                children: [
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      key: ValueKey(isLiked),
+                      size: 15,
+                      color: isLiked ? AppColors.red : colors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(width: 5),
+                  Text(
+                    AppStrings.exploreLikeLabel(post.likesCount),
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isLiked ? FontWeight.w600 : FontWeight.w400,
+                      color: isLiked ? AppColors.red : colors.textTertiary,
                     ),
                   ),
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── 카드 헤드라인 헬퍼 ─────────────────────────────────────
+
+class _ReviewHeadline extends StatelessWidget {
+  const _ReviewHeadline({required this.post, required this.colors});
+  final CommunityPost post;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final isResisted = post.resisted;
+    final hasItem = post.itemName != null && post.itemName!.isNotEmpty;
+    final headline = hasItem
+        ? (isResisted ? '💪 "${post.itemName}" 참기 성공!' : '😅 "${post.itemName}" 결국 샀어요')
+        : (isResisted ? '💪 72시간 참기 성공!' : '😅 결국 샀어요');
+    final color = isResisted ? AppColors.green : AppColors.yellow;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        headline,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _TipBadge extends StatelessWidget {
+  const _TipBadge({required this.colors});
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Text(
+          '💡 팁',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.accent,
           ),
         ),
       ),
     );
   }
+}
+
+// ── ⋯ 더보기 메뉴 버튼 ────────────────────────────────────
+
+class _PostMoreButton extends StatelessWidget {
+  const _PostMoreButton({
+    required this.post,
+    required this.colors,
+    required this.onEdit,
+    required this.onDelete,
+    this.iconSize = 16,
+  });
+  final CommunityPost post;
+  final AppColors colors;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        if (value == 'edit') onEdit();
+        if (value == 'delete') onDelete();
+      },
+      color: colors.surface,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colors.border),
+      ),
+      icon: Icon(Icons.more_horiz_rounded, size: iconSize, color: colors.textTertiary),
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(
+          value: 'edit',
+          height: 44,
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 16, color: colors.textSecondary),
+              const SizedBox(width: 10),
+              Text(
+                AppStrings.exploreMenuEdit,
+                style: TextStyle(fontSize: 14, color: colors.textPrimary),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'delete',
+          height: 44,
+          child: const Row(
+            children: [
+              Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.red),
+              SizedBox(width: 10),
+              Text(
+                AppStrings.exploreMenuDelete,
+                style: TextStyle(fontSize: 14, color: AppColors.red),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _confirmDeletePost(
+  BuildContext context,
+  WidgetRef ref,
+  String postId,
+) async {
+  final colors = context.colors;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        AppStrings.exploreDeleteTitle,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+      ),
+      content: Text(
+        AppStrings.exploreDeleteBody,
+        style: TextStyle(
+          fontSize: 14,
+          color: colors.textSecondary,
+          height: 1.6,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text(
+            AppStrings.exploreDeleteConfirm,
+            style: TextStyle(
+              color: AppColors.red,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+  await ref.read(communityRepositoryProvider).deletePost(postId);
 }
 
 // ── 게시글 상세 페이지 ─────────────────────────────────────
@@ -797,16 +928,25 @@ class _PostDetailPage extends ConsumerWidget {
         ),
         actions: [
           if (currentUid == post.uid)
-            IconButton(
-              icon: Icon(Icons.edit_outlined, size: 20, color: colors.textSecondary),
-              onPressed: () => showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => _EditPostSheet(
-                  post: post,
-                  onSuccess: () => Navigator.of(context).pop(),
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: _PostMoreButton(
+                post: post,
+                colors: colors,
+                iconSize: 20,
+                onEdit: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => _EditPostSheet(
+                    post: post,
+                    onSuccess: () => Navigator.of(context).pop(),
+                  ),
                 ),
+                onDelete: () async {
+                  await _confirmDeletePost(context, ref, post.id);
+                  if (context.mounted) Navigator.of(context).pop();
+                },
               ),
             ),
         ],
@@ -967,6 +1107,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isSubmitting = true);
     try {
       final nicknameState = ref.read(nicknameNotifierProvider);
@@ -985,10 +1126,32 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
         resisted: _resisted,
       );
       await ref.read(communityRepositoryProvider).addPost(post);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Text('🙌', style: TextStyle(fontSize: 16)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.exploreSubmitSuccess,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(AppStrings.exploreSubmitError(e))),
         );
         setState(() => _isSubmitting = false);
@@ -1029,16 +1192,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              AppStrings.exploreWriteSheetTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            // 유형 선택
+            // 유형 선택 (타이틀보다 먼저 — 타이틀이 유형에 반응)
             Row(
               children: [
                 _TypeChip(
@@ -1058,11 +1212,29 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            // 상황별 타이틀
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                _type == PostType.review
+                    ? AppStrings.exploreWriteReviewTitle
+                    : AppStrings.exploreWriteTipTitle,
+                key: ValueKey(_type),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                  height: 1.4,
+                ),
+              ),
+            ),
             if (_type == PostType.review) ...[
               const SizedBox(height: 16),
               _SheetField(
                 controller: _itemController,
                 hint: AppStrings.exploreItemNameHint,
+                secondaryHint: AppStrings.exploreItemNameExample,
                 colors: colors,
               ),
               const SizedBox(height: 12),
@@ -1080,7 +1252,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                     label: AppStrings.explorePurchased,
                     icon: Icons.shopping_bag_outlined,
                     selected: !_resisted,
-                    color: AppColors.green,
+                    color: AppColors.yellow,
                     onTap: () => setState(() => _resisted = false),
                   ),
                 ],
@@ -1093,10 +1265,22 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                   ? AppStrings.exploreReviewHint
                   : AppStrings.exploreTipHint,
               colors: colors,
-              maxLines: 4,
+              maxLines: 6,
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
+            // 참여 유도 힌트
+            Row(
+              children: [
+                Icon(Icons.people_outline_rounded, size: 13, color: colors.textTertiary),
+                const SizedBox(width: 5),
+                Text(
+                  AppStrings.exploreHelpOthers,
+                  style: TextStyle(fontSize: 12, color: colors.textTertiary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             GestureDetector(
               onTap: _canSubmit ? _submit : null,
               child: AnimatedOpacity(
@@ -1369,33 +1553,53 @@ class _SheetField extends StatelessWidget {
     required this.controller,
     required this.hint,
     required this.colors,
+    this.secondaryHint,
     this.maxLines = 1,
     this.onChanged,
   });
   final TextEditingController controller;
   final String hint;
+  final String? secondaryHint;
   final AppColors colors;
   final int maxLines;
   final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      onChanged: onChanged,
-      style: TextStyle(color: colors.textPrimary, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: colors.inactive),
-        filled: true,
-        fillColor: colors.background,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          onChanged: onChanged,
+          style: TextStyle(color: colors.textPrimary, fontSize: 15),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: colors.inactive,
+              height: maxLines > 1 ? 1.7 : null,
+            ),
+            filled: true,
+            fillColor: colors.background,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+        if (secondaryHint != null) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              secondaryHint!,
+              style: TextStyle(fontSize: 11, color: colors.textTertiary),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

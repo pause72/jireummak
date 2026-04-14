@@ -1,4 +1,4 @@
-package com.pause72.pause72
+package com.pause72.jireummak
 
 import io.flutter.embedding.android.FlutterActivity
 
