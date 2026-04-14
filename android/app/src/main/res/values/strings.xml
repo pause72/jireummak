@@ -6,6 +6,6 @@
     <string name="naver_client_name">지름막</string>
 
     <!-- TODO: 카카오 개발자센터(https://developers.kakao.com)에서 발급받은 키로 교체 -->
-    <string name="kakao_app_key">YOUR_KAKAO_NATIVE_APP_KEY</string>
-    <string name="kakao_oauth_host">kakaoYOUR_KAKAO_NATIVE_APP_KEY</string>
+    <string name="kakao_app_key">370369be3485ff3d48223c2229e1b351</string>
+    <string name="kakao_oauth_host">kakao370369be3485ff3d48223c2229e1b351</string>
 </resources>

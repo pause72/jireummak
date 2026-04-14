@@ -6,7 +6,7 @@ part of 'nickname_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$nicknameNotifierHash() => r'c1f993fa473f8d0a398faf75b257d2e356d89425';
+String _$nicknameNotifierHash() => r'35e05ff7572ca6a94616168e431dcee3311ae6f1';
 
 /// See also [NicknameNotifier].
 @ProviderFor(NicknameNotifier)

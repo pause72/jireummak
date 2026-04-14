@@ -11,4 +11,5 @@ abstract class CommunityRepository {
     required bool resisted,
   });
   Future<void> toggleLike(String postId, String currentUid);
+  Future<void> deletePost(String postId);
 }

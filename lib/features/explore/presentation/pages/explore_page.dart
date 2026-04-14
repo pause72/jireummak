@@ -52,6 +52,7 @@ class ExploreContent extends StatelessWidget {
 // ── 커뮤니티 페이지 ──────────────────────────────────────
 
 enum _PostFilter { all, review, tip }
+enum _PostSort { recent, popular }
 enum _AdSlot { banner, native }
 
 class ExplorePage extends ConsumerStatefulWidget {
@@ -63,21 +64,17 @@ class ExplorePage extends ConsumerStatefulWidget {
 
 class _ExplorePageState extends ConsumerState<ExplorePage> {
   _PostFilter _filter = _PostFilter.all;
+  _PostSort _sort = _PostSort.recent;
   BannerAd? _bannerAd;
   bool _isBannerLoaded = false;
   NativeAd? _nativeAd;
   bool _isNativeAdLoaded = false;
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadBannerAd();
     _loadNativeAd();
-    _searchController.addListener(() {
-      setState(() => _searchQuery = _searchController.text.trim());
-    });
   }
 
   void _loadBannerAd() {
@@ -108,7 +105,6 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
   void dispose() {
     _bannerAd?.dispose();
     _nativeAd?.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -147,7 +143,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _FilterRow(selected: _filter, onChanged: (f) => setState(() => _filter = f)),
-            _SearchBar(controller: _searchController),
+            _SortRow(selected: _sort, onChanged: (s) => setState(() => _sort = s)),
             Expanded(
               child: postsAsync.when(
                 loading: () => const Center(
@@ -164,12 +160,10 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                               ? p.type == PostType.review
                               : p.type == PostType.tip;
                         }).toList();
-                  if (_searchQuery.isNotEmpty) {
-                    final q = _searchQuery.toLowerCase();
-                    filtered = filtered
-                        .where((p) =>
-                            p.content.toLowerCase().contains(q))
-                        .toList();
+
+                  if (_sort == _PostSort.popular) {
+                    filtered = List.of(filtered)
+                      ..sort((a, b) => b.likesCount.compareTo(a.likesCount));
                   }
 
                   if (filtered.isEmpty) {
@@ -185,9 +179,16 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                   final mixedItems = _buildMixedList(filtered);
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
-                    itemCount: mixedItems.length,
+                    itemCount: mixedItems.length + 1, // +1 for banner
                     itemBuilder: (_, i) {
-                      final item = mixedItems[i];
+                      // 첫 번째 아이템: 동기부여 배너
+                      if (i == 0) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _MotivationBanner(posts: posts),
+                        );
+                      }
+                      final item = mixedItems[i - 1];
                       if (item == _AdSlot.banner) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -244,20 +245,25 @@ class _WriteFab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 52,
-        padding: const EdgeInsets.symmetric(horizontal: 20),
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 22),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: fabColors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(26),
+          borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: shadowColor.withValues(alpha: 0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: shadowColor.withValues(alpha: 0.55),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+            BoxShadow(
+              color: shadowColor.withValues(alpha: 0.20),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -282,56 +288,84 @@ class _WriteFab extends StatelessWidget {
   }
 }
 
-class _SearchBar extends StatelessWidget {
-  const _SearchBar({required this.controller});
-  final TextEditingController controller;
+class _SortRow extends StatelessWidget {
+  const _SortRow({required this.selected, required this.onChanged});
+  final _PostSort selected;
+  final ValueChanged<_PostSort> onChanged;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 4),
-      child: Container(
-        height: 42,
+      padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+      child: Row(
+        children: [
+          _SortChip(
+            label: AppStrings.exploreSortRecent,
+            icon: Icons.access_time_rounded,
+            selected: selected == _PostSort.recent,
+            onTap: () => onChanged(_PostSort.recent),
+            colors: colors,
+          ),
+          const SizedBox(width: 8),
+          _SortChip(
+            label: AppStrings.exploreSortPopular,
+            icon: Icons.local_fire_department_rounded,
+            selected: selected == _PostSort.popular,
+            onTap: () => onChanged(_PostSort.popular),
+            colors: colors,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SortChip extends StatelessWidget {
+  const _SortChip({
+    required this.label,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+    required this.colors,
+  });
+  final String label;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          color: colors.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: context.isDark ? null : Border.all(color: colors.border),
-          boxShadow: context.isDark
-              ? null
-              : [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 4, offset: const Offset(0, 1))],
+          color: selected ? AppColors.accent.withValues(alpha: 0.12) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: selected ? AppColors.accent : colors.border,
+            width: selected ? 1.5 : 1,
+          ),
         ),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(width: 12),
-            Icon(Icons.search_rounded, size: 18, color: colors.textTertiary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: TextField(
-                controller: controller,
-                style: TextStyle(fontSize: 14, color: colors.textPrimary),
-                decoration: InputDecoration(
-                  hintText: AppStrings.exploreSearchHint,
-                  hintStyle: TextStyle(fontSize: 14, color: colors.textTertiary),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                ),
-                textInputAction: TextInputAction.search,
-              ),
+            Icon(
+              icon,
+              size: 13,
+              color: selected ? AppColors.accent : colors.textTertiary,
             ),
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: controller,
-              builder: (context, value, child) {
-                if (value.text.isEmpty) return const SizedBox.shrink();
-                return GestureDetector(
-                  onTap: () => controller.clear(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Icon(Icons.close_rounded, size: 16, color: colors.textTertiary),
-                  ),
-                );
-              },
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                color: selected ? AppColors.accent : colors.textSecondary,
+              ),
             ),
           ],
         ),
@@ -402,6 +436,124 @@ class _FilterRow extends StatelessWidget {
   }
 }
 
+// ── 동기부여 배너 ──────────────────────────────────────────
+
+class _MotivationBanner extends StatelessWidget {
+  const _MotivationBanner({required this.posts});
+  final List<CommunityPost> posts;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+
+    final todayResisted = posts
+        .where((p) => p.type == PostType.review && p.resisted && p.createdAt.isAfter(todayStart))
+        .length;
+    final totalReviews = posts.where((p) => p.type == PostType.review).length;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.accent.withValues(alpha: context.isDark ? 0.30 : 0.14),
+            AppColors.green.withValues(alpha: context.isDark ? 0.22 : 0.10),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppColors.accent.withValues(alpha: 0.35),
+          width: 1.5,
+        ),
+      ),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Expanded(
+              child: _StatItem(
+                emoji: '🔥',
+                value: todayResisted,
+                unit: '명',
+                label: '오늘 참기 성공',
+                colors: colors,
+              ),
+            ),
+            VerticalDivider(width: 1, color: colors.border),
+            Expanded(
+              child: _StatItem(
+                emoji: '💬',
+                value: totalReviews,
+                unit: '개',
+                label: '실전 후기',
+                colors: colors,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({
+    required this.emoji,
+    required this.value,
+    required this.unit,
+    required this.label,
+    required this.colors,
+  });
+  final String emoji;
+  final int value;
+  final String unit;
+  final String label;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 14)),
+            const SizedBox(width: 4),
+            Text(
+              '$value',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.w800,
+                color: colors.textPrimary,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(width: 1),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 2),
+              child: Text(
+                unit,
+                style: TextStyle(fontSize: 12, color: colors.textSecondary, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          label,
+          style: TextStyle(fontSize: 11, color: colors.textTertiary),
+        ),
+      ],
+    );
+  }
+}
+
 class _PostCard extends ConsumerWidget {
   const _PostCard({
     required this.post,
@@ -448,111 +600,81 @@ class _PostCard extends ConsumerWidget {
         ),
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: colors.border),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: context.isDark ? 0.20 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ── Headline: 타입별 핵심 한 줄
+            if (isReview)
+              _ReviewHeadline(post: post, colors: colors)
+            else
+              _TipBadge(colors: colors),
+            const SizedBox(height: 10),
+            // ── Author
             Row(
               children: [
                 Container(
-                  width: 34,
-                  height: 34,
+                  width: 28,
+                  height: 28,
                   decoration: BoxDecoration(
                     color: avatarColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(17),
+                    borderRadius: BorderRadius.circular(14),
                   ),
                   child: Center(
                     child: Text(
                       displayNickname.isNotEmpty ? displayNickname[0] : '?',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: avatarColor,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        displayNickname,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: colors.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        post.relativeDate,
-                        style: TextStyle(fontSize: 11, color: colors.textTertiary),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: isReview
-                        ? AppColors.yellow.withValues(alpha: 0.15)
-                        : AppColors.green.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
                   child: Text(
-                    isReview ? AppStrings.exploreFilterReview : AppStrings.exploreFilterTip,
+                    displayNickname,
                     style: TextStyle(
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: isReview ? const Color(0xFFD97706) : AppColors.green,
+                      color: colors.textSecondary,
                     ),
                   ),
                 ),
+                Text(
+                  post.relativeDate,
+                  style: TextStyle(fontSize: 11, color: colors.textTertiary),
+                ),
                 if (currentUid == post.uid) ...[
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => showModalBottomSheet<void>(
+                  const SizedBox(width: 4),
+                  _PostMoreButton(
+                    post: post,
+                    colors: colors,
+                    onEdit: () => showModalBottomSheet<void>(
                       context: context,
                       isScrollControlled: true,
                       backgroundColor: Colors.transparent,
                       builder: (_) => _EditPostSheet(post: post),
                     ),
-                    child: Icon(Icons.edit_outlined, size: 16, color: colors.textTertiary),
+                    onDelete: () => _confirmDeletePost(context, ref, post.id),
                   ),
                 ],
               ],
             ),
-            if (post.itemName != null && post.itemName!.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: colors.surfaceHighlight,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.timer_outlined, size: 13, color: colors.textTertiary),
-                    const SizedBox(width: 5),
-                    Text(
-                      AppStrings.exploreResistStatus(post.resisted, post.itemName ?? ''),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: post.resisted ? AppColors.blue : colors.textSecondary,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+            // ── Content
             const SizedBox(height: 10),
             Text(
               post.content,
@@ -560,21 +682,27 @@ class _PostCard extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
               style: TextStyle(fontSize: 14, height: 1.6, color: colors.textPrimary),
             ),
+            // ── Like
             const SizedBox(height: 12),
             GestureDetector(
               onTap: onLike,
               child: Row(
                 children: [
-                  Icon(
-                    isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                    size: 16,
-                    color: isLiked ? AppColors.red : colors.textTertiary,
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                      key: ValueKey(isLiked),
+                      size: 15,
+                      color: isLiked ? AppColors.red : colors.textTertiary,
+                    ),
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: 5),
                   Text(
-                    '${post.likesCount}',
+                    AppStrings.exploreLikeLabel(post.likesCount),
                     style: TextStyle(
                       fontSize: 12,
+                      fontWeight: isLiked ? FontWeight.w600 : FontWeight.w400,
                       color: isLiked ? AppColors.red : colors.textTertiary,
                     ),
                   ),
@@ -586,6 +714,181 @@ class _PostCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+// ── 카드 헤드라인 헬퍼 ─────────────────────────────────────
+
+class _ReviewHeadline extends StatelessWidget {
+  const _ReviewHeadline({required this.post, required this.colors});
+  final CommunityPost post;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final isResisted = post.resisted;
+    final hasItem = post.itemName != null && post.itemName!.isNotEmpty;
+    final headline = hasItem
+        ? (isResisted ? '💪 "${post.itemName}" 참기 성공!' : '😅 "${post.itemName}" 결국 샀어요')
+        : (isResisted ? '💪 72시간 참기 성공!' : '😅 결국 샀어요');
+    final color = isResisted ? AppColors.green : AppColors.yellow;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        headline,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+      ),
+    );
+  }
+}
+
+class _TipBadge extends StatelessWidget {
+  const _TipBadge({required this.colors});
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: AppColors.accent.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: const Text(
+          '💡 팁',
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppColors.accent,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── ⋯ 더보기 메뉴 버튼 ────────────────────────────────────
+
+class _PostMoreButton extends StatelessWidget {
+  const _PostMoreButton({
+    required this.post,
+    required this.colors,
+    required this.onEdit,
+    required this.onDelete,
+    this.iconSize = 16,
+  });
+  final CommunityPost post;
+  final AppColors colors;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+  final double iconSize;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      onSelected: (value) {
+        if (value == 'edit') onEdit();
+        if (value == 'delete') onDelete();
+      },
+      color: colors.surface,
+      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colors.border),
+      ),
+      icon: Icon(Icons.more_horiz_rounded, size: iconSize, color: colors.textTertiary),
+      itemBuilder: (_) => [
+        PopupMenuItem<String>(
+          value: 'edit',
+          height: 44,
+          child: Row(
+            children: [
+              Icon(Icons.edit_outlined, size: 16, color: colors.textSecondary),
+              const SizedBox(width: 10),
+              Text(
+                AppStrings.exploreMenuEdit,
+                style: TextStyle(fontSize: 14, color: colors.textPrimary),
+              ),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
+          value: 'delete',
+          height: 44,
+          child: const Row(
+            children: [
+              Icon(Icons.delete_outline_rounded, size: 16, color: AppColors.red),
+              SizedBox(width: 10),
+              Text(
+                AppStrings.exploreMenuDelete,
+                style: TextStyle(fontSize: 14, color: AppColors.red),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+Future<void> _confirmDeletePost(
+  BuildContext context,
+  WidgetRef ref,
+  String postId,
+) async {
+  final colors = context.colors;
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        AppStrings.exploreDeleteTitle,
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+          color: colors.textPrimary,
+        ),
+      ),
+      content: Text(
+        AppStrings.exploreDeleteBody,
+        style: TextStyle(
+          fontSize: 14,
+          color: colors.textSecondary,
+          height: 1.6,
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(AppStrings.cancel, style: TextStyle(color: colors.textSecondary)),
+        ),
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: const Text(
+            AppStrings.exploreDeleteConfirm,
+            style: TextStyle(
+              color: AppColors.red,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+  if (confirmed != true) return;
+  await ref.read(communityRepositoryProvider).deletePost(postId);
 }
 
 // ── 게시글 상세 페이지 ─────────────────────────────────────
@@ -625,16 +928,25 @@ class _PostDetailPage extends ConsumerWidget {
         ),
         actions: [
           if (currentUid == post.uid)
-            IconButton(
-              icon: Icon(Icons.edit_outlined, size: 20, color: colors.textSecondary),
-              onPressed: () => showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                backgroundColor: Colors.transparent,
-                builder: (_) => _EditPostSheet(
-                  post: post,
-                  onSuccess: () => Navigator.of(context).pop(),
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: _PostMoreButton(
+                post: post,
+                colors: colors,
+                iconSize: 20,
+                onEdit: () => showModalBottomSheet<void>(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (_) => _EditPostSheet(
+                    post: post,
+                    onSuccess: () => Navigator.of(context).pop(),
+                  ),
                 ),
+                onDelete: () async {
+                  await _confirmDeletePost(context, ref, post.id);
+                  if (context.mounted) Navigator.of(context).pop();
+                },
               ),
             ),
         ],
@@ -795,6 +1107,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
       return;
     }
 
+    final messenger = ScaffoldMessenger.of(context);
     setState(() => _isSubmitting = true);
     try {
       final nicknameState = ref.read(nicknameNotifierProvider);
@@ -813,10 +1126,32 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
         resisted: _resisted,
       );
       await ref.read(communityRepositoryProvider).addPost(post);
-      if (mounted) Navigator.of(context).pop();
+      if (mounted) {
+        Navigator.of(context).pop();
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Text('🙌', style: TextStyle(fontSize: 16)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    AppStrings.exploreSubmitSuccess,
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            duration: const Duration(seconds: 3),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(content: Text(AppStrings.exploreSubmitError(e))),
         );
         setState(() => _isSubmitting = false);
@@ -857,16 +1192,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              AppStrings.exploreWriteSheetTitle,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: colors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 20),
-            // 유형 선택
+            // 유형 선택 (타이틀보다 먼저 — 타이틀이 유형에 반응)
             Row(
               children: [
                 _TypeChip(
@@ -886,11 +1212,29 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            // 상황별 타이틀
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                _type == PostType.review
+                    ? AppStrings.exploreWriteReviewTitle
+                    : AppStrings.exploreWriteTipTitle,
+                key: ValueKey(_type),
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: colors.textPrimary,
+                  height: 1.4,
+                ),
+              ),
+            ),
             if (_type == PostType.review) ...[
               const SizedBox(height: 16),
               _SheetField(
                 controller: _itemController,
                 hint: AppStrings.exploreItemNameHint,
+                secondaryHint: AppStrings.exploreItemNameExample,
                 colors: colors,
               ),
               const SizedBox(height: 12),
@@ -908,7 +1252,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                     label: AppStrings.explorePurchased,
                     icon: Icons.shopping_bag_outlined,
                     selected: !_resisted,
-                    color: AppColors.green,
+                    color: AppColors.yellow,
                     onTap: () => setState(() => _resisted = false),
                   ),
                 ],
@@ -921,10 +1265,22 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                   ? AppStrings.exploreReviewHint
                   : AppStrings.exploreTipHint,
               colors: colors,
-              maxLines: 4,
+              maxLines: 6,
               onChanged: (_) => setState(() {}),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 8),
+            // 참여 유도 힌트
+            Row(
+              children: [
+                Icon(Icons.people_outline_rounded, size: 13, color: colors.textTertiary),
+                const SizedBox(width: 5),
+                Text(
+                  AppStrings.exploreHelpOthers,
+                  style: TextStyle(fontSize: 12, color: colors.textTertiary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             GestureDetector(
               onTap: _canSubmit ? _submit : null,
               child: AnimatedOpacity(
@@ -1197,33 +1553,53 @@ class _SheetField extends StatelessWidget {
     required this.controller,
     required this.hint,
     required this.colors,
+    this.secondaryHint,
     this.maxLines = 1,
     this.onChanged,
   });
   final TextEditingController controller;
   final String hint;
+  final String? secondaryHint;
   final AppColors colors;
   final int maxLines;
   final ValueChanged<String>? onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      maxLines: maxLines,
-      onChanged: onChanged,
-      style: TextStyle(color: colors.textPrimary, fontSize: 15),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(color: colors.inactive),
-        filled: true,
-        fillColor: colors.background,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: controller,
+          maxLines: maxLines,
+          onChanged: onChanged,
+          style: TextStyle(color: colors.textPrimary, fontSize: 15),
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: TextStyle(
+              color: colors.inactive,
+              height: maxLines > 1 ? 1.7 : null,
+            ),
+            filled: true,
+            fillColor: colors.background,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+        if (secondaryHint != null) ...[
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              secondaryHint!,
+              style: TextStyle(fontSize: 11, color: colors.textTertiary),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

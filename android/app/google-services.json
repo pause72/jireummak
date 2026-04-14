@@ -1,26 +1,51 @@
 {
   "project_info": {
-    "project_number": "304393749591",
-    "project_id": "pause72-31936",
-    "storage_bucket": "pause72-31936.firebasestorage.app"
+    "project_number": "884745183528",
+    "project_id": "jireummak",
+    "storage_bucket": "jireummak.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:304393749591:android:5302f6e090cdd33a548f12",
+        "mobilesdk_app_id": "1:884745183528:android:2a5296df5cf347b70bf01d",
         "android_client_info": {
-          "package_name": "com.pause72.pause72"
+          "package_name": "com.pause72.jireummak"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "884745183528-62cna2f1s5eidm1hopuoe986s6tc8j09.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pause72.jireummak",
+            "certificate_hash": "d628c468be16e88da787686c67c551950cd29cef"
+          }
+        },
+        {
+          "client_id": "884745183528-vh360sm0e80j9khhh28nsasln9ccadvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyDdUU7wnXXbkNXy7Z9Z55Mh0iuIPyURiYU"
+          "current_key": "AIzaSyACDipjfFnEv8chvkrCh7xhJzkBpNUuWIk"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "884745183528-vh360sm0e80j9khhh28nsasln9ccadvl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "884745183528-rcdh9hkr0l69itn1f14nb43g3iulp144.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.pause72.jireummak"
+              }
+            }
+          ]
         }
       }
     }

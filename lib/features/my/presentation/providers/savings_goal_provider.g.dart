@@ -7,7 +7,7 @@ part of 'savings_goal_provider.dart';
 // **************************************************************************
 
 String _$savingsGoalNotifierHash() =>
-    r'45581f8162d34f9021aed72c30b95241305db9eb';
+    r'68295ee52b102d3030296be7043d0cb35e1028ec';
 
 /// See also [SavingsGoalNotifier].
 @ProviderFor(SavingsGoalNotifier)

@@ -14,26 +14,34 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
+  // ── 인트로 애니메이션 (2000ms, one-shot) ─────────────────
   late final AnimationController _controller;
-  late final Animation<double> _bgFade;
   late final Animation<double> _iconScale;
   late final Animation<double> _iconFade;
   late final Animation<double> _titleFade;
   late final Animation<Offset> _titleSlide;
   late final Animation<double> _subFade;
 
+  // ── 배경 float 애니메이션 (3000ms, repeat) ───────────────
+  late final AnimationController _bgCtrl;
+  late final Animation<double> _bgDrift;
+
   @override
   void initState() {
     super.initState();
 
+    // 배경 float
+    _bgCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3200),
+    )..repeat(reverse: true);
+    _bgDrift = CurvedAnimation(parent: _bgCtrl, curve: Curves.easeInOut);
+
+    // 인트로
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
-    );
-
-    _bgFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _controller, curve: const Interval(0.0, 0.3)),
     );
 
     _iconScale = Tween<double>(begin: 0.6, end: 1.0).animate(
@@ -75,45 +83,68 @@ class _SplashPageState extends State<SplashPage>
   @override
   void dispose() {
     _controller.dispose();
+    _bgCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: AnimatedBuilder(
-        animation: _bgFade,
-        builder: (context, child) {
-          return Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF0B0D14), Color(0xFF0F1828), Color(0xFF1A2E50)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: child,
-          );
-        },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0B0D14), Color(0xFF0F1828), Color(0xFF1A2E50)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
         child: Stack(
           children: [
-            // 배경 장식 원
-            Positioned(
-              top: -80,
-              right: -60,
-              child: _GlowCircle(color: const Color(0xFF4D8FE8), size: 260, opacity: 0.12),
+            // ── 배경 float 원 ─────────────────────────────
+            AnimatedBuilder(
+              animation: _bgDrift,
+              builder: (context, _) {
+                final d = _bgDrift.value;
+                return Stack(
+                  children: [
+                    Positioned(
+                      top: -80 + d * 22,
+                      right: -60 + d * 12,
+                      child: _GlowCircle(
+                        color: const Color(0xFF4D8FE8),
+                        size: 260,
+                        opacity: 0.10 + d * 0.05,
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 60 - d * 16,
+                      left: -80 + d * 10,
+                      child: _GlowCircle(
+                        color: const Color(0xFF2D6FD4),
+                        size: 220,
+                        opacity: 0.06 + d * 0.04,
+                      ),
+                    ),
+                    // 추가: 중앙 우상단 작은 원
+                    Positioned(
+                      top: 180 + d * 14,
+                      right: 30 - d * 8,
+                      child: _GlowCircle(
+                        color: const Color(0xFF7BB8F0),
+                        size: 100,
+                        opacity: 0.05 + d * 0.04,
+                      ),
+                    ),
+                  ],
+                );
+              },
             ),
-            Positioned(
-              bottom: 60,
-              left: -80,
-              child: _GlowCircle(color: const Color(0xFF2D6FD4), size: 220, opacity: 0.08),
-            ),
-            // 중앙 콘텐츠
+            // ── 중앙 콘텐츠 ───────────────────────────────
             Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 아이콘
+                  // 아이콘: "72H" 타이머 박스
                   FadeTransition(
                     opacity: _iconFade,
                     child: ScaleTransition(
@@ -122,31 +153,16 @@ class _SplashPageState extends State<SplashPage>
                     ),
                   ),
                   const SizedBox(height: 28),
-                  // 제목
+                  // 브랜드명: "지름" + "막" 컬러 분리
                   FadeTransition(
                     opacity: _titleFade,
                     child: SlideTransition(
                       position: _titleSlide,
-                      child: ShaderMask(
-                        shaderCallback: (bounds) => const LinearGradient(
-                          colors: [Color(0xFF7BB8F0), Color(0xFFF0F4FF)],
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
-                        ).createShader(bounds),
-                        child: const Text(
-                          AppStrings.appName,
-                          style: TextStyle(
-                            fontSize: 44,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                            letterSpacing: 6,
-                          ),
-                        ),
-                      ),
+                      child: const _BrandTitle(),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  // 서브타이틀
+                  const SizedBox(height: 18),
+                  // 카피: 질문형
                   FadeTransition(
                     opacity: _subFade,
                     child: const Column(
@@ -155,20 +171,20 @@ class _SplashPageState extends State<SplashPage>
                         Text(
                           AppStrings.splashLine1,
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 14,
                             fontWeight: FontWeight.w400,
-                            color: Color(0xFF7A8BA8),
-                            letterSpacing: 1.5,
+                            color: Color(0xFF8EA6C4),
+                            letterSpacing: 0.5,
                           ),
                         ),
                         SizedBox(height: 4),
                         Text(
                           AppStrings.splashLine2,
                           style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w400,
-                            color: Color(0xFF7A8BA8),
-                            letterSpacing: 1.5,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFADC9E8),
+                            letterSpacing: 0.3,
                           ),
                         ),
                       ],
@@ -177,7 +193,7 @@ class _SplashPageState extends State<SplashPage>
                 ],
               ),
             ),
-            // 하단 로딩 도트
+            // ── 하단 로딩 도트 ────────────────────────────
             Positioned(
               bottom: 60,
               left: 0,
@@ -194,35 +210,92 @@ class _SplashPageState extends State<SplashPage>
   }
 }
 
+// ── 72H 아이콘 박스 ────────────────────────────────────────
+
 class _IconBox extends StatelessWidget {
   const _IconBox();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 88,
-      height: 88,
+      width: 92,
+      height: 92,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF4D8FE8), Color(0xFF2D6FD4)],
+          colors: [Color(0xFF4D8FE8), Color(0xFF2354B8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4D8FE8).withValues(alpha: 0.5),
-            blurRadius: 28,
-            offset: const Offset(0, 8),
+            color: const Color(0xFF4D8FE8).withValues(alpha: 0.55),
+            blurRadius: 32,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
-      child: const Center(
-        child: Text('🛑', style: TextStyle(fontSize: 40)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Text(
+            '72',
+            style: TextStyle(
+              fontSize: 36,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              height: 1.0,
+              letterSpacing: -1,
+            ),
+          ),
+          Container(
+            margin: const EdgeInsets.only(top: 2),
+            child: const Text(
+              'HOURS',
+              style: TextStyle(
+                fontSize: 8,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFBDD5F5),
+                letterSpacing: 2.5,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
+
+// ── 브랜드명 ("지름" + "막" 컬러 분리) ────────────────────
+
+class _BrandTitle extends StatelessWidget {
+  const _BrandTitle();
+
+  @override
+  Widget build(BuildContext context) {
+    return RichText(
+      text: const TextSpan(
+        style: TextStyle(
+          fontSize: 44,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 4,
+        ),
+        children: [
+          TextSpan(
+            text: '지름',
+            style: TextStyle(color: Color(0xFFDDE9F7)),
+          ),
+          TextSpan(
+            text: '막',
+            style: TextStyle(color: Color(0xFF5BA4F5)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 배경 글로우 원 ─────────────────────────────────────────
 
 class _GlowCircle extends StatelessWidget {
   const _GlowCircle({
@@ -247,6 +320,8 @@ class _GlowCircle extends StatelessWidget {
     );
   }
 }
+
+// ── 로딩 도트 ─────────────────────────────────────────────
 
 class _LoadingDots extends StatefulWidget {
   const _LoadingDots();

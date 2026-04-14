@@ -73,6 +73,11 @@ class FirestoreCommunityRepository implements CommunityRepository {
     }
   }
 
+  @override
+  Future<void> deletePost(String postId) async {
+    await _col.doc(postId).delete();
+  }
+
   static CommunityPost _fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data()!;
     final typeStr = data['type'] as String? ?? 'tip';

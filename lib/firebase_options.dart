@@ -20,29 +20,30 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAwILMz-OMHuOZn8b1H8li6wJRNp-Q1wp8',
-    appId: '1:304393749591:web:b58498d10c24b128548f12',
-    messagingSenderId: '304393749591',
-    projectId: 'pause72-31936',
-    authDomain: 'pause72-31936.firebaseapp.com',
-    storageBucket: 'pause72-31936.firebasestorage.app',
-    measurementId: 'G-94RNBMY085',
+    apiKey: 'AIzaSyDaA8pu6QwK_9RoILDdhtXi25PmAE_7Uvk',
+    appId: '1:884745183528:web:58e772e62b1466560bf01d',
+    messagingSenderId: '884745183528',
+    projectId: 'jireummak',
+    authDomain: 'jireummak.firebaseapp.com',
+    storageBucket: 'jireummak.firebasestorage.app',
+    measurementId: 'G-L9TN9DBPBN',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDdUU7wnXXbkNXy7Z9Z55Mh0iuIPyURiYU',
-    appId: '1:304393749591:android:5302f6e090cdd33a548f12',
-    messagingSenderId: '304393749591',
-    projectId: 'pause72-31936',
-    storageBucket: 'pause72-31936.firebasestorage.app',
+    apiKey: 'AIzaSyACDipjfFnEv8chvkrCh7xhJzkBpNUuWIk',
+    appId: '1:884745183528:android:2a5296df5cf347b70bf01d',
+    messagingSenderId: '884745183528',
+    projectId: 'jireummak',
+    storageBucket: 'jireummak.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBNlysx8rYfyf1AKPhOUu44Wo1-R3uD6Rk',
-    appId: '1:304393749591:ios:eb8594df8b520657548f12',
-    messagingSenderId: '304393749591',
-    projectId: 'pause72-31936',
-    storageBucket: 'pause72-31936.firebasestorage.app',
-    iosBundleId: 'com.pause72.pause72',
+    apiKey: 'AIzaSyAtt3QEezbJeTvOaiKK36bSixk3YesS5pQ',
+    appId: '1:884745183528:ios:2c6cb415560075ed0bf01d',
+    messagingSenderId: '884745183528',
+    projectId: 'jireummak',
+    storageBucket: 'jireummak.firebasestorage.app',
+    iosBundleId: 'com.pause72.jireummak',
   );
+
 }

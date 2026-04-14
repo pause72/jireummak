@@ -44,6 +44,13 @@ extension WishItemX on WishItem {
     final d = remainingDuration;
     final h = d.inHours;
     final m = d.inMinutes.remainder(60);
+    if (h >= 48) {
+      final days = h ~/ 24;
+      final remH = h % 24;
+      return remH > 0 ? '$days일 $remH시간 남음' : '$days일 남음';
+    }
+    if (h >= 24) return '내일만 버티면 끝이에요';
+    if (h >= 6) return '거의 다 왔어요';
     if (h > 0) return AppStrings.wishRemainingHours(h, m);
     return AppStrings.wishRemainingMinutes(m);
   }

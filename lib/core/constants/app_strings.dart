@@ -14,8 +14,8 @@ class AppStrings {
   static const loading = '로딩 중...';
 
   // ── Splash ───────────────────────────────────────────────
-  static const splashLine1 = '사기 전에 72시간 참기,';
-  static const splashLine2 = '진짜 필요한지 생각해보세요';
+  static const splashLine1 = '지금 사고 싶은 거,';
+  static const splashLine2 = '72시간 뒤에도 필요할까요?';
 
   // ── 로그인 ───────────────────────────────────────────────
   static const loginContinueWith = 'SNS 계정으로 계속하기';
@@ -25,14 +25,17 @@ class AppStrings {
   static const loginRequiredSnackbar = '로그인 후 이용할 수 있어요';
 
   // ── 홈 (참기 등록) ────────────────────────────────────────
-  static const homeAddSheetTitle = '무엇을 사고 싶으신가요?';
-  static const homeItemNameHint = '사고 싶은 물건 (필수)';
-  static const homePriceHint = '가격 (필수)';
-  static const homeReasonHint = '왜 사고 싶은가요? (선택)';
-  static const homeStartButton = '72시간 시작';
-  static const homeFabLabel = '72시간 참기';
+  static const homeAddSheetTitle = '이 구매를 72시간 미뤄볼까요?';
+  static const homeItemNameHint = '예: 발뮤다 토스터기, 나이키 운동화';
+  static const homePriceHint = '얼마짜리예요?';
+  static const homeReasonHint = '지금 사고 싶은 이유를 적어보세요';
+  static const homeStartButton = '참기 시작하기';
+  static const homeFabLabel = '참기 시작하기';
   static const homeItemNameRequired = '사고 싶은 물건을 입력해주세요';
   static const homePriceRequired = '가격을 입력해주세요';
+  static const homeConfirmTitle = '참기 시작할까요?';
+  static const homeConfirmBody = '72시간 동안 이 구매를 미루기로 합니다.\n그 사이에 마음이 바뀔 수도 있어요.';
+  static const homeConfirmButton = '참기 시작';
 
   // ── 구매 전 체크리스트 ────────────────────────────────────
   static const checklistTitle = '잠깐, 마지막 점검!';
@@ -42,7 +45,7 @@ class AppStrings {
   static const checklistConfirm = '그래도 살게요';
 
   // ── 이미지 첨부 ──────────────────────────────────────────
-  static const homeImagePickerLabel = '사진 첨부 (선택)';
+  static const homeImagePickerLabel = '사고 싶은 물건 사진 추가';
   static const homeImagePickerCamera = '사진 찍기';
   static const homeImagePickerGallery = '앨범에서 선택';
   static const homeImagePickerRemove = '사진 제거';
@@ -61,31 +64,43 @@ class AppStrings {
   static const cardDeleteConfirm = '중지';
 
   // ── 참기 아이템 남은 시간 ────────────────────────────────
-  static const wishExpiredText = '72시간 완료 — 결정할 시간!';
+  static const wishExpiredText = '지금 결정하세요!';
   static String wishRemainingHours(int h, int m) => '$h시간 $m분 남음';
   static String wishRemainingMinutes(int m) => '$m분 남음';
 
   // ── 나눔 (커뮤니티) ─────────────────────────────────────
-  static const exploreFabLabel = '나눔등록';
-  static const exploreSearchHint = '내용 검색';
+  static const exploreFabLabel = '내 경험 공유하기';
   static const exploreFilterAll = '전체';
   static const exploreFilterReview = '후기';
   static const exploreFilterTip = '팁';
+  static const exploreSortRecent = '최신순';
+  static const exploreSortPopular = '인기순';
   static const exploreEmptyPosts = '아직 게시글이 없어요\n첫 번째 나눔을 남겨보세요!';
   static const exploreLoadError = '불러오기 실패';
   static const exploreWriteSheetTitle = '어떤 이야기를 나눌까요?';
   static const exploreEditSheetTitle = '나눔 수정';
-  static const exploreItemNameHint = '참기 아이템 이름 (선택)';
-  static const exploreResisted = '참았어요';
-  static const explorePurchased = '샀어요';
-  static const exploreReviewHint = '72시간 참기 후기를 자유롭게 남겨주세요.';
+  static const exploreItemNameHint = '어떤 걸 참았나요? (선택)';
+  static const exploreItemNameExample = '예: 발뮤다 토스터기';
+  static const exploreResisted = '참았어요 💪';
+  static const explorePurchased = '결국 샀어요 😅';
+  static const exploreReviewHint = '왜 사고 싶었나요?\n72시간 동안 어떤 생각이 들었나요?\n결과는 어땠나요?';
   static const exploreTipHint = '소비 습관이나 절약에 도움이 된 팁을 공유해주세요.';
-  static const explorePostSubmitButton = '나눔 등록';
+  static const explorePostSubmitButton = '내 경험 나누기';
   static const exploreEditSubmitButton = '수정 완료';
+  static const exploreWriteReviewTitle = '72시간 버틴 이야기, 들려주세요 💪';
+  static const exploreWriteTipTitle = '다른 사람에게 도움이 될 팁을 알려주세요 💡';
+  static const exploreSubmitSuccess = '좋은 경험을 나눠주셔서 감사해요 🙌';
+  static const exploreHelpOthers = '이 글이 다른 사람의 참기에 도움이 됩니다';
+  static const exploreMenuEdit = '수정';
+  static const exploreMenuDelete = '삭제';
+  static const exploreDeleteTitle = '게시글을 삭제할까요?';
+  static const exploreDeleteBody = '이 글에 달린 공감도 함께 사라집니다.\n삭제 후에는 되돌릴 수 없어요.';
+  static const exploreDeleteConfirm = '삭제';
 
   // dynamic
   static String exploreResistStatus(bool resisted, String itemName) =>
       '72시간 후 ${resisted ? "참았어요" : "샀어요"} — $itemName';
+  static String exploreLikeLabel(int count) => '$count명 공감';
   static String exploreSubmitError(Object e) => '등록 실패: $e';
   static String exploreEditError(Object e) => '수정 실패: $e';
 
@@ -95,9 +110,10 @@ class AppStrings {
   static const section72hRule = '72시간 룰';
 
   // ── 마이 / 설정 ──────────────────────────────────────────
-  static const myLearning = '배움';
+  static const myLearning = '소비 인사이트';
   static const mySettings = '설정';
   static const myNotificationSettings = '알림 설정';
+  static const myNotificationSubtitle = '72시간 참기후 리마인드 알림';
   static const myAppInfo = '앱 정보';
   static const myVersion = '버전';
   static const myTerms = '이용약관';
