@@ -9,8 +9,9 @@ import '../../../../features/auth/presentation/providers/auth_provider.dart';
 
 part 'nickname_provider.g.dart';
 
-const _kNicknameKey = 'user_nickname';
-const _kLastChangedAtKey = 'nickname_last_changed_at'; // epoch millis
+// UID 기반 키: 계정 전환 시 다른 계정 데이터가 오염되지 않도록
+String _nicknameKey(String uid) => 'user_nickname_$uid';
+String _lastChangedAtKey(String uid) => 'nickname_last_changed_at_$uid';
 
 const _adjectives = [
   '빠른', '용감한', '행복한', '귀여운', '멋진', '신나는', '달리는', '뛰어난', '씩씩한',
@@ -29,11 +30,14 @@ class NicknameState {
     required this.nickname,
     this.lastChangedAt,
     this.isLoading = false,
+    this.isInitialized = false,
   });
 
   final String nickname;
   final DateTime? lastChangedAt;
   final bool isLoading;
+  /// Firestore 동기화 완료 여부 — false 동안엔 UI에서 로딩 표시
+  final bool isInitialized;
 
   // 한 번도 변경 안 했거나 30일 이상 지났으면 변경 가능
   bool get canChange {
@@ -48,11 +52,12 @@ class NicknameState {
     return 30 - elapsed.inDays;
   }
 
-  NicknameState copyWith({String? nickname, DateTime? lastChangedAt, bool? isLoading, bool clearLastChangedAt = false}) {
+  NicknameState copyWith({String? nickname, DateTime? lastChangedAt, bool? isLoading, bool? isInitialized, bool clearLastChangedAt = false}) {
     return NicknameState(
       nickname: nickname ?? this.nickname,
       lastChangedAt: clearLastChangedAt ? null : (lastChangedAt ?? this.lastChangedAt),
       isLoading: isLoading ?? this.isLoading,
+      isInitialized: isInitialized ?? this.isInitialized,
     );
   }
 }
@@ -66,9 +71,13 @@ class NicknameNotifier extends _$NicknameNotifier {
     final prefs = ref.watch(sharedPreferencesProvider).valueOrNull;
     final user = ref.watch(authStateProvider).valueOrNull;
 
-    // 로컬 캐시로 즉시 초기화
-    final cachedNick = prefs?.getString(_kNicknameKey) ?? '';
-    final lastChangedMillis = prefs?.getInt(_kLastChangedAtKey);
+    // 로그인 안 된 상태면 빈 상태 반환 (다른 계정 캐시 노출 방지)
+    if (user == null) return const NicknameState(nickname: '');
+
+    // UID 기반 키로 해당 계정의 캐시만 읽음
+    final uid = user.uid;
+    final cachedNick = prefs?.getString(_nicknameKey(uid)) ?? '';
+    final lastChangedMillis = prefs?.getInt(_lastChangedAtKey(uid));
     final lastChangedAt = lastChangedMillis != null
         ? DateTime.fromMillisecondsSinceEpoch(lastChangedMillis)
         : null;
@@ -78,10 +87,8 @@ class NicknameNotifier extends _$NicknameNotifier {
       lastChangedAt: lastChangedAt,
     );
 
-    // 로그인 상태면 Firestore에서 동기화
-    if (user != null) {
-      _syncFromFirestore(user.uid);
-    }
+    // Firestore에서 동기화 (항상 최신값이 최종)
+    _syncFromFirestore(uid);
 
     return localState;
   }
@@ -91,35 +98,38 @@ class NicknameNotifier extends _$NicknameNotifier {
       final doc = await _db.doc('users/$uid').get();
       final prefs = ref.read(sharedPreferencesProvider).valueOrNull;
 
-      if (!doc.exists || doc.data() == null) {
-        // 신규 유저: 랜덤 닉네임 생성 후 저장
-        final nick = state.nickname.isNotEmpty ? state.nickname : _generate();
+      // doc이 없거나 nickname 필드가 비어 있으면 신규 유저로 처리
+      // (카카오 로그인 시 Cloud Function이 nickname 없이 doc을 먼저 생성하는 케이스 포함)
+      final existingNick = doc.exists && doc.data() != null
+          ? (doc.data()!['nickname'] as String? ?? '')
+          : '';
+
+      if (existingNick.isEmpty) {
+        final nick = _generate();
         await _db.doc('users/$uid').set({
           'nickname': nick,
           'nicknameLastChangedAt': null,
         }, SetOptions(merge: true));
-        await prefs?.setString(_kNicknameKey, nick);
-        await prefs?.remove(_kLastChangedAtKey);
-        state = NicknameState(nickname: nick);
+        await prefs?.setString(_nicknameKey(uid), nick);
+        await prefs?.remove(_lastChangedAtKey(uid));
+        state = NicknameState(nickname: nick, isInitialized: true);
         return;
       }
 
       final data = doc.data()!;
-      final nick = data['nickname'] as String? ?? '';
       final changedTs = data['nicknameLastChangedAt'];
       final lastChangedAt = changedTs is Timestamp ? changedTs.toDate() : null;
 
-      if (nick.isNotEmpty) {
-        await prefs?.setString(_kNicknameKey, nick);
-        if (lastChangedAt != null) {
-          await prefs?.setInt(_kLastChangedAtKey, lastChangedAt.millisecondsSinceEpoch);
-        } else {
-          await prefs?.remove(_kLastChangedAtKey);
-        }
-        state = NicknameState(nickname: nick, lastChangedAt: lastChangedAt);
+      await prefs?.setString(_nicknameKey(uid), existingNick);
+      if (lastChangedAt != null) {
+        await prefs?.setInt(_lastChangedAtKey(uid), lastChangedAt.millisecondsSinceEpoch);
+      } else {
+        await prefs?.remove(_lastChangedAtKey(uid));
       }
+      state = NicknameState(nickname: existingNick, lastChangedAt: lastChangedAt, isInitialized: true);
     } catch (e) {
       debugPrint('[NicknameNotifier] sync failed: $e');
+      state = state.copyWith(isInitialized: true);
     }
   }
 
@@ -170,8 +180,8 @@ class NicknameNotifier extends _$NicknameNotifier {
 
       final now = DateTime.now();
       final prefs = ref.read(sharedPreferencesProvider).valueOrNull;
-      await prefs?.setString(_kNicknameKey, trimmed);
-      await prefs?.setInt(_kLastChangedAtKey, now.millisecondsSinceEpoch);
+      await prefs?.setString(_nicknameKey(user.uid), trimmed);
+      await prefs?.setInt(_lastChangedAtKey(user.uid), now.millisecondsSinceEpoch);
 
       state = NicknameState(nickname: trimmed, lastChangedAt: now);
       return null;

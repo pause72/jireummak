@@ -493,7 +493,7 @@ class _ProfileCard extends StatelessWidget {
       );
     }
 
-    final nickname = nicknameState.nickname.isNotEmpty ? nicknameState.nickname : AppStrings.loading;
+    final nickname = nicknameState.nickname.isNotEmpty ? nicknameState.nickname : '';
 
     return Container(
       width: double.infinity,
@@ -538,7 +538,7 @@ class _ProfileCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (nicknameState.isLoading)
+              if (nicknameState.isLoading || !nicknameState.isInitialized)
                 const SizedBox(
                   width: 14,
                   height: 14,

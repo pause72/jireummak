@@ -12,7 +12,20 @@
           "package_name": "com.pause72.jireummak"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "884745183528-62cna2f1s5eidm1hopuoe986s6tc8j09.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pause72.jireummak",
+            "certificate_hash": "d628c468be16e88da787686c67c551950cd29cef"
+          }
+        },
+        {
+          "client_id": "884745183528-vh360sm0e80j9khhh28nsasln9ccadvl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyACDipjfFnEv8chvkrCh7xhJzkBpNUuWIk"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "884745183528-vh360sm0e80j9khhh28nsasln9ccadvl.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "884745183528-rcdh9hkr0l69itn1f14nb43g3iulp144.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.pause72.jireummak"
+              }
+            }
+          ]
         }
       }
     }
