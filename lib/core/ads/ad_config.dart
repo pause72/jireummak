@@ -7,7 +7,7 @@ class AdConfig {
   AdConfig._();
 
   static String get interstitialAdUnitId => Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/1033173712'
+      ? 'ca-app-pub-9892920356540798/1203274797'
       : 'ca-app-pub-3940256099942544/4411468910';
 
   static String get bannerAdUnitId => Platform.isAndroid
@@ -15,6 +15,6 @@ class AdConfig {
       : 'ca-app-pub-3940256099942544/2934735716';
 
   static String get nativeAdUnitId => Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/2247696110'
+      ? 'ca-app-pub-9892920356540798/5997045287'
       : 'ca-app-pub-3940256099942544/3986624511';
 }

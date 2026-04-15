@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "884745183528-aelf10ad0nb2eh0uvtbl2fcm6kem6ld0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pause72.jireummak",
+            "certificate_hash": "ccb967074ae5a370a6c1b361c0c9a58d067a4834"
+          }
+        },
+        {
           "client_id": "884745183528-vh360sm0e80j9khhh28nsasln9ccadvl.apps.googleusercontent.com",
           "client_type": 3
         }

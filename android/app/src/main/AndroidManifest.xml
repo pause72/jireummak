@@ -31,7 +31,7 @@
         </activity>
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-9892920356540798~1776321566"/>
 
         <!-- 카카오 로그인: Flutter SDK는 AuthCodeCustomTabsActivity를 사용 -->
         <activity
