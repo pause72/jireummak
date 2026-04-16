@@ -3,8 +3,11 @@ import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_strings.dart';
+
+const _kOnboardingKey = 'onboarding_complete';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -73,8 +76,15 @@ class _SplashPageState extends State<SplashPage>
 
     _controller.forward();
 
-    Future.delayed(const Duration(milliseconds: 3000), () {
+    Future.delayed(const Duration(milliseconds: 3000), () async {
       if (!mounted) return;
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingDone = prefs.getBool(_kOnboardingKey) ?? false;
+      if (!mounted) return;
+      if (!onboardingDone) {
+        context.go('/onboarding');
+        return;
+      }
       final isLoggedIn = FirebaseAuth.instance.currentUser != null;
       context.go(isLoggedIn ? '/main' : '/login');
     });

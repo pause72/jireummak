@@ -17,6 +17,32 @@ class AppStrings {
   static const splashLine1 = '지금 사고 싶은 거,';
   static const splashLine2 = '72시간 뒤에도 필요할까요?';
 
+  // ── 온보딩 ───────────────────────────────────────────────
+  static const onboardingSkip = '건너뛰기';
+  static const onboardingNext = '다음';
+  static const onboardingStart = '시작하기';
+
+  // 슬라이드 1
+  static const onboarding1Headline1 = '지금 사고 싶은 거,';
+  static const onboarding1Headline2 = '정말 필요한 걸까요?';
+  static const onboarding1Body = '시간이 지나면 욕구도 줄어듭니다.\n72시간이 그 분기점이에요.';
+
+  // 슬라이드 2
+  static const onboarding2Headline = '이렇게 써보세요';
+  static const onboarding2Feature1Title = '참기 등록';
+  static const onboarding2Feature1Body = '사고 싶은 걸 등록하면\n72시간 카운트다운이 시작돼요';
+  static const onboarding2Feature2Title = '기록 & 통계';
+  static const onboarding2Feature2Body = '참기·구매 결과를 기록하고\n소비 패턴을 한눈에 확인해요';
+  static const onboarding2Feature3Title = '공유 & 공감';
+  static const onboarding2Feature3Body = '같은 고민을 가진 사람들과\n경험과 팁을 나눠요';
+  static const onboarding2Feature4Title = '절약 목표 설정';
+  static const onboarding2Feature4Body = '마이 탭에서 목표를 설정하면\n참을수록 목표에 가까워져요';
+
+  // 슬라이드 3
+  static const onboarding3Headline1 = '소비를 조금 더';
+  static const onboarding3Headline2 = '똑똑하게';
+  static const onboarding3Body = '72시간이 지나도 여전히 갖고 싶다면,\n그때 사세요. 그게 진짜 소비예요.';
+
   // ── 로그인 ───────────────────────────────────────────────
   static const loginContinueWith = 'SNS 계정으로 계속하기';
   static const loginRequired = '로그인이 필요해요';

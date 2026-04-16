@@ -183,7 +183,7 @@ class NicknameNotifier extends _$NicknameNotifier {
       await prefs?.setString(_nicknameKey(user.uid), trimmed);
       await prefs?.setInt(_lastChangedAtKey(user.uid), now.millisecondsSinceEpoch);
 
-      state = NicknameState(nickname: trimmed, lastChangedAt: now);
+      state = NicknameState(nickname: trimmed, lastChangedAt: now, isInitialized: true);
       return null;
     } on _DuplicateNicknameException {
       state = state.copyWith(isLoading: false);

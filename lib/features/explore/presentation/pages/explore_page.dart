@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../../../../core/ads/ad_config.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
@@ -53,7 +51,6 @@ class ExploreContent extends StatelessWidget {
 
 enum _PostFilter { all, review, tip }
 enum _PostSort { recent, popular }
-enum _AdSlot { banner, native }
 
 class ExplorePage extends ConsumerStatefulWidget {
   const ExplorePage({super.key});
@@ -65,62 +62,6 @@ class ExplorePage extends ConsumerStatefulWidget {
 class _ExplorePageState extends ConsumerState<ExplorePage> {
   _PostFilter _filter = _PostFilter.all;
   _PostSort _sort = _PostSort.recent;
-  BannerAd? _bannerAd;
-  bool _isBannerLoaded = false;
-  NativeAd? _nativeAd;
-  bool _isNativeAdLoaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBannerAd();
-    _loadNativeAd();
-  }
-
-  void _loadBannerAd() {
-    _bannerAd = BannerAd(
-      adUnitId: AdConfig.bannerAdUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) => setState(() => _isBannerLoaded = true),
-        onAdFailedToLoad: (ad, _) => ad.dispose(),
-      ),
-    )..load();
-  }
-
-  void _loadNativeAd() {
-    _nativeAd = NativeAd(
-      adUnitId: AdConfig.nativeAdUnitId,
-      request: const AdRequest(),
-      nativeTemplateStyle: NativeTemplateStyle(templateType: TemplateType.medium),
-      listener: NativeAdListener(
-        onAdLoaded: (_) => setState(() => _isNativeAdLoaded = true),
-        onAdFailedToLoad: (ad, _) => ad.dispose(),
-      ),
-    )..load();
-  }
-
-  @override
-  void dispose() {
-    _bannerAd?.dispose();
-    _nativeAd?.dispose();
-    super.dispose();
-  }
-
-  // 배너: 2번째 카드 뒤, 네이티브: 이후 5개마다 삽입
-  List<Object> _buildMixedList(List<CommunityPost> posts) {
-    final List<Object> mixed = [];
-    for (int i = 0; i < posts.length; i++) {
-      mixed.add(posts[i]);
-      if (i == 1 && _isBannerLoaded) {
-        mixed.add(_AdSlot.banner);
-      } else if (i > 1 && (i + 1) % 5 == 0 && _isNativeAdLoaded) {
-        mixed.add(_AdSlot.native);
-      }
-    }
-    return mixed;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -176,10 +117,9 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                     );
                   }
 
-                  final mixedItems = _buildMixedList(filtered);
                   return ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
-                    itemCount: mixedItems.length + 1, // +1 for banner
+                    itemCount: filtered.length + 1, // +1 for motivation banner
                     itemBuilder: (_, i) {
                       // 첫 번째 아이템: 동기부여 배너
                       if (i == 0) {
@@ -188,24 +128,7 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
                           child: _MotivationBanner(posts: posts),
                         );
                       }
-                      final item = mixedItems[i - 1];
-                      if (item == _AdSlot.banner) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: _bannerAd!.size.height.toDouble(),
-                            child: AdWidget(ad: _bannerAd!),
-                          ),
-                        );
-                      }
-                      if (item == _AdSlot.native) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: SizedBox(height: 320, child: AdWidget(ad: _nativeAd!)),
-                        );
-                      }
-                      final post = item as CommunityPost;
+                      final post = filtered[i - 1];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _PostCard(
