@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../../core/ads/interstitial_ad_service.dart';
+import '../../../../core/ads/rewarded_ad_service.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/local/wish_image_local_store.dart';
@@ -85,9 +85,20 @@ class HomePage extends ConsumerWidget {
     );
   }
 
+  static const _freeSlots = 3;
+
   void _showAddItemSheet(BuildContext context, WidgetRef ref) {
+    final items = ref.read(waitingItemsProvider);
     final messenger = ScaffoldMessenger.of(context);
 
+    if (items.length < _freeSlots) {
+      _openSheet(context, ref, messenger);
+    } else {
+      _showAdGateDialog(context, ref, messenger);
+    }
+  }
+
+  void _openSheet(BuildContext context, WidgetRef ref, ScaffoldMessengerState messenger) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -97,46 +108,108 @@ class HomePage extends ConsumerWidget {
       ),
       builder: (ctx) => _AddItemSheet(
         ref: ref,
-        onCompleted: () => _handleAddCompleted(messenger),
+        onCompleted: () => _showSuccessSnackbar(messenger),
       ),
     );
   }
 
-  void _handleAddCompleted(ScaffoldMessengerState messenger) {
-    // 1. "좋은 선택이에요" 피드백
+  void _showSuccessSnackbar(ScaffoldMessengerState messenger) {
+    final msg = _motivationalMessages[Random().nextInt(_motivationalMessages.length)];
     messenger.showSnackBar(
       SnackBar(
-        content: const Row(
+        content: Row(
           children: [
-            Text('좋은 선택이에요 💪', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-            SizedBox(width: 6),
-            Text('72시간 참기가 시작됩니다', style: TextStyle(fontSize: 13)),
+            const Text('좋은 선택이에요 💪', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const SizedBox(width: 6),
+            Expanded(child: Text(msg, style: const TextStyle(fontSize: 13))),
           ],
         ),
-        duration: const Duration(milliseconds: 1200),
+        duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
       ),
     );
+  }
 
-    // 2. 1초 후 광고 → 광고 끝나면 동기부여 메시지
-    Future.delayed(const Duration(seconds: 1), () {
-      InterstitialAdService.instance.show(
-        onDismissed: () {
-          final msg = _motivationalMessages[Random().nextInt(_motivationalMessages.length)];
-          messenger.showSnackBar(
-            SnackBar(
-              content: Text(msg, style: const TextStyle(fontSize: 13)),
-              duration: const Duration(seconds: 3),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+  void _showAdGateDialog(BuildContext context, WidgetRef ref, ScaffoldMessengerState messenger) {
+    final colors = context.colors;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: colors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.play_circle_outline_rounded, color: AppColors.accent, size: 30),
             ),
-          );
-        },
-      );
-    });
+            const SizedBox(height: 16),
+            Text(
+              '슬롯이 가득 찼어요',
+              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '$_freeSlots개까지 참기 등록이 가능해요.\n짧은 광고를 보면 하나 더 추가할 수 있어요.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: colors.textSecondary, height: 1.6),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                  _watchAdAndAdd(context, ref, messenger);
+                },
+                icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                label: const Text('광고 보고 추가하기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: Text('취소', style: TextStyle(fontSize: 14, color: colors.textTertiary)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _watchAdAndAdd(BuildContext context, WidgetRef ref, ScaffoldMessengerState messenger) {
+    RewardedAdService.instance.show(
+      onRewarded: () {
+        if (!context.mounted) return;
+        _openSheet(context, ref, messenger);
+      },
+      onNotAvailable: () {
+        messenger.showSnackBar(
+          SnackBar(
+            content: const Text('광고를 불러오는 중이에요. 잠시 후 다시 시도해주세요.'),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),
+          ),
+        );
+      },
+    );
   }
 }
 

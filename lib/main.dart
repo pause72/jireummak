@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
 import 'core/ads/interstitial_ad_service.dart';
+import 'core/ads/rewarded_ad_service.dart';
 import 'core/constants/social_auth_config.dart';
 import 'core/services/notification_service.dart';
 import 'core/theme/theme_provider.dart';
@@ -22,6 +23,7 @@ void main() async {
   await MobileAds.instance.initialize();
   await NotificationService().initialize();
   InterstitialAdService.instance.load();
+  RewardedAdService.instance.load();
   final prefs = await SharedPreferences.getInstance();
   runApp(
     ProviderScope(
