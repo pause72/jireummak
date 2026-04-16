@@ -35,7 +35,7 @@ class AppPolicyStrings {
       '앱은 필요한 경우 약관을 변경할 수 있으며, 변경된 약관은 앱 내 공지를 통해 이용자에게 알립니다. 변경된 약관에 동의하지 않는 경우 서비스 이용을 중단하고 탈퇴할 수 있습니다.';
 
   static const termsAdditionalTitle = '부칙';
-  static const termsAdditionalBody = '본 약관은 2025년 1월 1일부터 시행됩니다.';
+  static const termsAdditionalBody = '본 약관은 2026년 4월 1일부터 시행됩니다.';
 
   // ── 개인정보 처리방침 ──────────────────────────────────────
   static const privacy1Title = '1. 수집하는 개인정보';
@@ -68,5 +68,5 @@ class AppPolicyStrings {
 
   static const privacy8Title = '8. 방침의 변경';
   static const privacy8Body =
-      '본 개인정보 처리방침은 법령, 정책 변경에 따라 수정될 수 있으며 변경 시 앱 내 공지를 통해 안내합니다.\n\n시행일: 2025년 1월 1일';
+      '본 개인정보 처리방침은 법령, 정책 변경에 따라 수정될 수 있으며 변경 시 앱 내 공지를 통해 안내합니다.\n\n시행일: 2026년 4월 1일';
 }
