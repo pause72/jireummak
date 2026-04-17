@@ -52,7 +52,7 @@ class AppStrings {
 
   // ── 홈 (참기 등록) ────────────────────────────────────────
   static const homeAddSheetTitle = '이 구매를 72시간 미뤄볼까요?';
-  static const homeItemNameHint = '예: 발뮤다 토스터기, 나이키 운동화';
+  static const homeItemNameHint = '예: 무선 청소기, 겨울 패딩, 러닝화';
   static const homePriceHint = '얼마짜리예요?';
   static const homeReasonHint = '지금 사고 싶은 이유를 적어보세요';
   static const homeStartButton = '참기 시작하기';
@@ -106,7 +106,7 @@ class AppStrings {
   static const exploreWriteSheetTitle = '어떤 이야기를 나눌까요?';
   static const exploreEditSheetTitle = '나눔 수정';
   static const exploreItemNameHint = '어떤 걸 참았나요? (선택)';
-  static const exploreItemNameExample = '예: 발뮤다 토스터기';
+  static const exploreItemNameExample = '예: 무선 청소기, 겨울 패딩, 러닝화';
   static const exploreResisted = '참았어요 💪';
   static const explorePurchased = '결국 샀어요 😅';
   static const exploreReviewHint = '왜 사고 싶었나요?\n72시간 동안 어떤 생각이 들었나요?\n결과는 어땠나요?';
@@ -209,7 +209,6 @@ class AppStrings {
   static const rule3Title = '절약한 돈의 힘';
   static const rule3Body =
       '매달 충동구매를 3번만 참아도 연간 수십만 원이 모입니다. 참을 때마다 저축 목표에 그 금액을 이체하면 동기부여가 배가됩니다.';
-
   // ── 알림 ────────────────────────────────────────────────
   static const notifChannelName = '참기 알림';
   static const notifChannelDesc = '72시간 참기 진행 알림';

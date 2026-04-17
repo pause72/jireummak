@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -523,13 +524,15 @@ class _ProfileCard extends StatelessWidget {
             ),
             padding: const EdgeInsets.all(2.5),
             child: ClipOval(
-              child: user!.photoUrl != null
-                  ? Image.network(
-                      user!.photoUrl!,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, _, _) => _defaultAvatar(colors),
-                    )
-                  : _defaultAvatar(colors),
+              child: _isKakaoUser()
+                  ? _kakaoAvatar()
+                  : user!.photoUrl != null
+                      ? Image.network(
+                          user!.photoUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => _defaultAvatar(colors),
+                        )
+                      : _defaultAvatar(colors),
             ),
           ),
           const SizedBox(height: 12),
@@ -622,11 +625,34 @@ class _ProfileCard extends StatelessWidget {
     );
   }
 
+  Widget _kakaoAvatar() {
+    return Container(
+      color: const Color(0xFFFFE302),
+      child: const Center(
+        child: Text(
+          'K',
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w900,
+            color: Colors.black,
+            height: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _defaultAvatar(AppColors colors) {
     return Container(
       color: colors.surfaceHighlight,
       child: Icon(Icons.person_outline, color: colors.inactive, size: 30),
     );
+  }
+
+  bool _isKakaoUser() {
+    final fbUser = FirebaseAuth.instance.currentUser;
+    if (fbUser == null || fbUser.isAnonymous) return false;
+    return !fbUser.providerData.any((p) => p.providerId == 'google.com');
   }
 }
 

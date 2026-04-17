@@ -1208,6 +1208,7 @@ class _WritePostSheetState extends ConsumerState<_WritePostSheet> {
                 hint: AppStrings.exploreItemNameHint,
                 secondaryHint: AppStrings.exploreItemNameExample,
                 colors: colors,
+                maxLength: 20,
               ),
               const SizedBox(height: 12),
               Row(
@@ -1434,6 +1435,7 @@ class _EditPostSheetState extends ConsumerState<_EditPostSheet> {
                 controller: _itemController,
                 hint: AppStrings.exploreItemNameHint,
                 colors: colors,
+                maxLength: 20,
               ),
               const SizedBox(height: 12),
               Row(
@@ -1527,6 +1529,7 @@ class _SheetField extends StatelessWidget {
     required this.colors,
     this.secondaryHint,
     this.maxLines = 1,
+    this.maxLength,
     this.onChanged,
   });
   final TextEditingController controller;
@@ -1534,6 +1537,7 @@ class _SheetField extends StatelessWidget {
   final String? secondaryHint;
   final AppColors colors;
   final int maxLines;
+  final int? maxLength;
   final ValueChanged<String>? onChanged;
 
   @override
@@ -1544,6 +1548,7 @@ class _SheetField extends StatelessWidget {
         TextField(
           controller: controller,
           maxLines: maxLines,
+          maxLength: maxLength,
           onChanged: onChanged,
           style: TextStyle(color: colors.textPrimary, fontSize: 15),
           decoration: InputDecoration(
@@ -1559,6 +1564,7 @@ class _SheetField extends StatelessWidget {
               borderSide: BorderSide.none,
             ),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            counterText: maxLength != null ? null : '',
           ),
         ),
         if (secondaryHint != null) ...[
