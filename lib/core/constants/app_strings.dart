@@ -209,6 +209,127 @@ class AppStrings {
   static const rule3Title = '절약한 돈의 힘';
   static const rule3Body =
       '매달 충동구매를 3번만 참아도 연간 수십만 원이 모입니다. 참을 때마다 저축 목표에 그 금액을 이체하면 동기부여가 배가됩니다.';
+  // ── 내비게이션 바 ─────────────────────────────────────────
+  static const navResist = '참기';
+  static const navRecord = '기록';
+  static const navExplore = '공유';
+  static const navMy = '마이';
+
+  // ── 홈 - 등록 후 상태 ─────────────────────────────────────
+  static String homeWaitingCount(int n) => '지금 $n개를 참고 있어요 💪';
+  static const homeWaitingFooter =
+      '잘 참고 있어요 🌿\n더 추가하고 싶은 게 있다면 참기 시작하기 버튼을 눌러보세요';
+  static const homeSuccessSnackbarTitle = '좋은 선택이에요 💪';
+  static const homeSlotFullTitle = '슬롯이 가득 찼어요';
+  static String homeSlotFullBody(int freeSlots) =>
+      '$freeSlots개까지 참기 등록이 가능해요.\n짧은 광고를 보면 하나 더 추가할 수 있어요.';
+  static const homeWatchAdButton = '광고 보고 추가하기';
+  static const homeAdNotReady = '광고를 불러오는 중이에요. 잠시 후 다시 시도해주세요.';
+
+  static const motivationalMessages = [
+    '72시간 후엔 마음이 달라져 있을 거예요 🌱',
+    '참는 것도 연습이에요. 잘 하고 있어요 ✨',
+    '지금 이 참음이 나중의 여유가 돼요 💰',
+    '충동을 이겼어요. 대단해요! 🎉',
+    '현명한 소비를 선택했어요 💪',
+    '3일 후 다시 물어볼게요. 그때도 사고 싶으면 그때 사요 😊',
+  ];
+
+  // ── 참기 카드 - 추가 ─────────────────────────────────────
+  static const cardMenuEdit = '수정';
+  static const cardMenuDelete = '삭제';
+  static const cardEditTitle = '참기 수정';
+  static const cardEditSubmit = '수정 완료';
+  static const encouragementButton = '좋아요!';
+
+  static const resistMessages = <(String, String, String)>[
+    ('🎉', '잘 참았어요!', '72시간을 버텨낸 현명한 선택이에요.\n이 절약이 쌓여 큰 자산이 될 거예요.'),
+    ('💪', '충동을 이겼어요!', '참을 때마다 조금씩 더 강해지고 있어요.\n오늘의 절약, 정말 잘했어요!'),
+    ('🌱', '훌륭해요!', '72시간이 지나 마음이 식었다면,\n그건 처음부터 충동이었던 거예요.'),
+    ('✨', '멋진 선택이에요!', '사지 않는 것도 훌륭한 소비예요.\n절약한 돈은 더 의미 있는 곳에 쓰일 거예요.'),
+    ('🏆', '대단해요!', '스스로를 이겨낸 오늘이 자랑스러워요.\n이 습관이 미래를 바꿔줄 거예요.'),
+  ];
+
+  static const purchaseMessages = <(String, String, String)>[
+    ('🛒', '72시간 고민 끝의 선택이에요!', '구매 전 최저가를 꼭 확인하세요.\n네이버쇼핑이나 다나와를 활용해보세요!'),
+    ('💡', '충분히 생각한 소비예요!', '구매 전 리뷰를 한 번 더 확인하고,\n최저가 알림을 설정해두면 더 좋아요.'),
+    ('✅', '현명한 소비예요!', '충동이 아닌 확신으로 내린 결정이에요.\n좋은 가격에 구매하길 바라요!'),
+    ('💰', '진짜 필요한 거니까 사는 거예요!', '구매 전 최저가 한 번만 더 확인해봐요.\n잘 쓰면 그것도 현명한 소비예요.'),
+  ];
+
+  // ── 기록 탭 ───────────────────────────────────────────────
+  static const recordTotalSavedLabel = '💰 지금까지 아낀 금액';
+  static const recordResistSuccessLabel = '🔥 참기 성공';
+  static const recordPurchaseLabel = '🛍️ 구매';
+  static const recordFilterAll = '전체';
+  static const recordFilterResisted = '참음';
+  static const recordFilterPurchased = '구매';
+  static const recordSortRecent = '최근순';
+  static const recordSortPriceHigh = '금액 높은순';
+  static const badgeWaiting = '참기 중';
+  static const badgePurchased = '구매 😅';
+  static const badgeResisted = '성공 💪';
+  static const recordEmptyLabel = '아직 기록이 없어요';
+  static const recordDeclineButton = '안 살게요';
+  static String daysAgo(int d) => '$d일 전';
+  static String hoursAgo(int h) => '$h시간 전';
+  static const justNow = '방금 전';
+  static String recordResistedAgo(String ago) => '참기 성공 $ago';
+  static String recordPurchasedAgo(String ago) => '구매 $ago';
+
+  // ── 통계 탭 ───────────────────────────────────────────────
+  static const statsWaitingLabel = '참기';
+  static String statsDecisionSummary(int decided, int cancelled) =>
+      '결정한 $decided건 중 $cancelled건 취소';
+  static String statsSpent(String amount) => '구매 지출 $amount';
+  static const statsEmptyMessage = '아직 기록이 없어요.';
+  static const statsEmptySubMessage =
+      '갖고 싶은 게 생기면 글쓰기 버튼으로 72시간 참기를 시작해보세요.';
+  static const statsNoCancelMessage = '아직 취소한 항목이 없어요.';
+  static const statsNoCancelSubMessage = '72시간이 지나면 진짜 필요한지 다시 생각해보세요.';
+  static const statsHighRateMessage = '대단해요! 충동구매를 잘 참고 있어요.';
+  static const statsHighRateSubMessage = '절약한 금액으로 더 의미 있는 것에 투자해보세요.';
+  static const statsMidRateMessage = '좋은 습관을 만들어가고 있어요.';
+  static const statsMidRateSubMessage = '72시간 후 다시 생각하면 불필요한 소비가 보여요.';
+  static const statsLowRateMessage = '조금씩 더 참아봐요.';
+  static const statsLowRateSubMessage = '충동구매를 줄이면 소비 습관이 달라져요.';
+
+  // ── 마이 - 닉네임 추가 ────────────────────────────────────
+  static const nicknameChangeInfo = '30일에 한 번 변경할 수 있어요.';
+  static String nicknameChangeDays(int d) => '$d일 후에 변경할 수 있어요.';
+  static const nicknameRequired = '닉네임을 입력해주세요.';
+
+  // ── 마이 - 절약 목표 다이얼로그 ──────────────────────────
+  static const goalAddDialogTitle = '어떤 목표를 위해 참을까요?';
+  static const goalMotivation = '이 목표를 위해 소비를 줄여보세요 💪';
+  static const goalSetButton = '목표 설정하기';
+  static const goalEditDialogTitle = '목표를 수정할까요?';
+  static const goalUpdateButton = '목표 업데이트';
+  static const goalEmptyAdd = '+ 목표를 설정해보세요 🎯';
+  static const goalTitleHintAdd = '예: 내집마련, 여행가기, 아이폰 구매';
+  static const goalTitleHintEdit = '예: 내집마련, 여행가기';
+  static const goalAmountFieldHint = '목표 금액';
+  static const goalEditShortLabel = '수정';
+  static const goalAddShortLabel = '추가';
+
+  // ── 마이 - 레벨 / 진행 피드백 ──────────────────────────────
+  static String levelBadge(int count) {
+    if (count >= 50) return '🏆 Lv.5 절약마스터';
+    if (count >= 20) return '💎 Lv.4 절약왕';
+    if (count >= 10) return '🔥 Lv.3 참기고수';
+    if (count >= 5) return '💪 Lv.2 절약러';
+    return '🌱 Lv.1 절약 입문';
+  }
+
+  static String progressFeedback(double progress) {
+    if (progress >= 1.0) return '목표 달성! 🏆';
+    if (progress >= 0.9) return '마지막 고비예요 ✨';
+    if (progress >= 0.6) return '거의 다 왔어요 🔥';
+    if (progress >= 0.3) return '잘 하고 있어요 💪';
+    if (progress >= 0.1) return '좋은 출발이에요 👍';
+    return '아직 시작이에요 🚀';
+  }
+
   // ── 알림 ────────────────────────────────────────────────
   static const notifChannelName = '참기 알림';
   static const notifChannelDesc = '72시간 참기 진행 알림';

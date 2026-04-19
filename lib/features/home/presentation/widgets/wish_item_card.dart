@@ -65,23 +65,9 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
     }
   }
 
-  static const _resistMessages = [
-    ('🎉', '잘 참았어요!', '72시간을 버텨낸 현명한 선택이에요.\n이 절약이 쌓여 큰 자산이 될 거예요.'),
-    ('💪', '충동을 이겼어요!', '참을 때마다 조금씩 더 강해지고 있어요.\n오늘의 절약, 정말 잘했어요!'),
-    ('🌱', '훌륭해요!', '72시간이 지나 마음이 식었다면,\n그건 처음부터 충동이었던 거예요.'),
-    ('✨', '멋진 선택이에요!', '사지 않는 것도 훌륭한 소비예요.\n절약한 돈은 더 의미 있는 곳에 쓰일 거예요.'),
-    ('🏆', '대단해요!', '스스로를 이겨낸 오늘이 자랑스러워요.\n이 습관이 미래를 바꿔줄 거예요.'),
-  ];
-
-  static const _purchaseMessages = [
-    ('🛒', '72시간 고민 끝의 선택이에요!', '구매 전 최저가를 꼭 확인하세요.\n네이버쇼핑이나 다나와를 활용해보세요!'),
-    ('💡', '충분히 생각한 소비예요!', '구매 전 리뷰를 한 번 더 확인하고,\n최저가 알림을 설정해두면 더 좋아요.'),
-    ('✅', '현명한 소비예요!', '충동이 아닌 확신으로 내린 결정이에요.\n좋은 가격에 구매하길 바라요!'),
-    ('💰', '진짜 필요한 거니까 사는 거예요!', '구매 전 최저가 한 번만 더 확인해봐요.\n잘 쓰면 그것도 현명한 소비예요.'),
-  ];
 
   void _showEncouragement(BuildContext context, {required bool resisted}) {
-    final messages = resisted ? _resistMessages : _purchaseMessages;
+    final messages = resisted ? AppStrings.resistMessages : AppStrings.purchaseMessages;
     final msg = messages[Random().nextInt(messages.length)];
     final colors = context.colors;
     final accentColor = resisted ? AppColors.green : AppColors.accent;
@@ -132,7 +118,7 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text(
-                  '좋아요!',
+                  AppStrings.encouragementButton,
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -176,7 +162,7 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
             children: [
               Icon(Icons.edit_outlined, size: 18, color: colors.textSecondary),
               const SizedBox(width: 10),
-              Text('수정', style: TextStyle(fontSize: 14, color: colors.textPrimary)),
+              Text(AppStrings.cardMenuEdit, style: TextStyle(fontSize: 14, color: colors.textPrimary)),
             ],
           ),
         ),
@@ -187,7 +173,7 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
             children: [
               Icon(Icons.delete_outline_rounded, size: 18, color: AppColors.red),
               SizedBox(width: 10),
-              Text('삭제', style: TextStyle(fontSize: 14, color: AppColors.red)),
+              Text(AppStrings.cardMenuDelete, style: TextStyle(fontSize: 14, color: AppColors.red)),
             ],
           ),
         ),
@@ -620,7 +606,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            '참기 수정',
+            AppStrings.cardEditTitle,
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: colors.textPrimary),
           ),
           const SizedBox(height: 20),
@@ -663,7 +649,7 @@ class _EditItemSheetState extends State<_EditItemSheet> {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('수정 완료', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  : const Text(AppStrings.cardEditSubmit, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             ),
           ),
         ],

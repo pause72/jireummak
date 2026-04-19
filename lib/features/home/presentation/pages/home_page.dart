@@ -14,14 +14,6 @@ import '../providers/wish_item_provider.dart';
 import '../widgets/empty_waiting_state.dart';
 import '../widgets/wish_item_card.dart';
 
-const _motivationalMessages = [
-  '72시간 후엔 마음이 달라져 있을 거예요 🌱',
-  '참는 것도 연습이에요. 잘 하고 있어요 ✨',
-  '지금 이 참음이 나중의 여유가 돼요 💰',
-  '충동을 이겼어요. 대단해요! 🎉',
-  '현명한 소비를 선택했어요 💪',
-  '3일 후 다시 물어볼게요. 그때도 사고 싶으면 그때 사요 😊',
-];
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -43,7 +35,7 @@ class HomePage extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(20, 14, 20, 4),
                     child: Text(
-                      '지금 ${items.length}개를 참고 있어요 💪',
+                      AppStrings.homeWaitingCount(items.length),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
@@ -61,7 +53,7 @@ class HomePage extends ConsumerWidget {
                       padding: const EdgeInsets.only(top: 8),
                       child: Center(
                         child: Text(
-                          '잘 참고 있어요 🌿\n더 추가하고 싶은 게 있다면 참기 시작하기 버튼을 눌러보세요',
+                          AppStrings.homeWaitingFooter,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -114,12 +106,12 @@ class HomePage extends ConsumerWidget {
   }
 
   void _showSuccessSnackbar(ScaffoldMessengerState messenger) {
-    final msg = _motivationalMessages[Random().nextInt(_motivationalMessages.length)];
+    final msg = AppStrings.motivationalMessages[Random().nextInt(AppStrings.motivationalMessages.length)];
     messenger.showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Text('좋은 선택이에요 💪', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            const Text(AppStrings.homeSuccessSnackbarTitle, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
             const SizedBox(width: 6),
             Expanded(child: Text(msg, style: const TextStyle(fontSize: 13))),
           ],
@@ -154,12 +146,12 @@ class HomePage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              '슬롯이 가득 찼어요',
+              AppStrings.homeSlotFullTitle,
               style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary),
             ),
             const SizedBox(height: 10),
             Text(
-              '$_freeSlots개까지 참기 등록이 가능해요.\n짧은 광고를 보면 하나 더 추가할 수 있어요.',
+              AppStrings.homeSlotFullBody(_freeSlots),
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: colors.textSecondary, height: 1.6),
             ),
@@ -173,7 +165,7 @@ class HomePage extends ConsumerWidget {
                   _watchAdAndAdd(context, ref, messenger);
                 },
                 icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                label: const Text('광고 보고 추가하기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                label: const Text(AppStrings.homeWatchAdButton, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.accent,
                   foregroundColor: Colors.white,
@@ -202,7 +194,7 @@ class HomePage extends ConsumerWidget {
       onNotAvailable: () {
         messenger.showSnackBar(
           SnackBar(
-            content: const Text('광고를 불러오는 중이에요. 잠시 후 다시 시도해주세요.'),
+            content: const Text(AppStrings.homeAdNotReady),
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 80),

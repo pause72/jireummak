@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/home/domain/models/wish_item_model.dart';
 import '../../../../features/home/domain/models/wish_item_status.dart';
@@ -138,7 +139,7 @@ class _SummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '💰 지금까지 아낀 금액',
+                  AppStrings.recordTotalSavedLabel,
                   style: TextStyle(fontSize: 11, color: colors.textSecondary),
                 ),
                 const SizedBox(height: 4),
@@ -156,9 +157,9 @@ class _SummaryCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              _StatRow('🔥 참기 성공', '${resisted.length}회', AppColors.green, colors),
+              _StatRow(AppStrings.recordResistSuccessLabel, '${resisted.length}회', AppColors.green, colors),
               const SizedBox(height: 6),
-              _StatRow('🛍️ 구매', '${purchased.length}회', AppColors.yellow, colors),
+              _StatRow(AppStrings.recordPurchaseLabel, '${purchased.length}회', AppColors.yellow, colors),
             ],
           ),
         ],
@@ -230,21 +231,21 @@ class _FilterChips extends StatelessWidget {
     final filters = <({_Filter filter, String label, int count, IconData icon, Color color})>[
       (
         filter: _Filter.all,
-        label: '전체',
+        label: AppStrings.recordFilterAll,
         count: allCount,
         icon: Icons.grid_view_rounded,
         color: AppColors.accent,
       ),
       (
         filter: _Filter.resisted,
-        label: '참음',
+        label: AppStrings.recordFilterResisted,
         count: resistedCount,
         icon: Icons.self_improvement_rounded,
         color: AppColors.green,
       ),
       (
         filter: _Filter.purchased,
-        label: '구매',
+        label: AppStrings.recordFilterPurchased,
         count: purchasedCount,
         icon: Icons.shopping_bag_outlined,
         color: AppColors.yellow,
@@ -331,8 +332,8 @@ class _SortButton extends StatelessWidget {
       ),
       icon: Icon(Icons.sort_rounded, size: 20, color: colors.textSecondary),
       itemBuilder: (_) => [
-        _sortItem(_Sort.recent, '최근순', sort),
-        _sortItem(_Sort.priceHigh, '금액 높은순', sort),
+        _sortItem(_Sort.recent, AppStrings.recordSortRecent, sort),
+        _sortItem(_Sort.priceHigh, AppStrings.recordSortPriceHigh, sort),
       ],
     );
   }
@@ -481,7 +482,7 @@ class _HistoryItemCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: _DecisionButton(
-                    label: '안 살게요',
+                    label: AppStrings.recordDeclineButton,
                     icon: Icons.close_rounded,
                     color: colors.surfaceHighlight,
                     textColor: colors.textSecondary,
@@ -493,7 +494,7 @@ class _HistoryItemCard extends ConsumerWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _DecisionButton(
-                    label: '살게요',
+                    label: AppStrings.cardBuy,
                     icon: Icons.shopping_bag_outlined,
                     color: AppColors.accent,
                     textColor: Colors.white,
@@ -514,14 +515,14 @@ class _HistoryItemCard extends ConsumerWidget {
     final base = item.decidedAt ?? item.createdAt;
     final diff = DateTime.now().difference(base);
     final ago = diff.inDays > 0
-        ? '${diff.inDays}일 전'
+        ? AppStrings.daysAgo(diff.inDays)
         : diff.inHours > 0
-            ? '${diff.inHours}시간 전'
-            : '방금 전';
+            ? AppStrings.hoursAgo(diff.inHours)
+            : AppStrings.justNow;
 
     return switch (item.status) {
-      WishItemStatus.cancelled => '참기 성공 $ago',
-      WishItemStatus.purchased => '구매 $ago',
+      WishItemStatus.cancelled => AppStrings.recordResistedAgo(ago),
+      WishItemStatus.purchased => AppStrings.recordPurchasedAgo(ago),
       _ => ago,
     };
   }
@@ -539,18 +540,18 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     if (status == WishItemStatus.waiting) {
-      if (isExpired) return _badge('결정!', AppColors.accent, Colors.white);
-      return _badge('참기 중', colors.surfaceHighlight, colors.textSecondary);
+      if (isExpired) return _badge(AppStrings.cardDecisionBadge, AppColors.accent, Colors.white);
+      return _badge(AppStrings.badgeWaiting, colors.surfaceHighlight, colors.textSecondary);
     }
     if (status == WishItemStatus.purchased) {
       return _badge(
-        '구매 😅',
+        AppStrings.badgePurchased,
         AppColors.yellow.withValues(alpha: 0.18),
         AppColors.yellow,
       );
     }
     return _badge(
-      '성공 💪',
+      AppStrings.badgeResisted,
       AppColors.green.withValues(alpha: 0.18),
       AppColors.green,
     );
@@ -638,7 +639,7 @@ class _EmptyHistory extends StatelessWidget {
           Icon(Icons.history, size: 56, color: colors.border),
           const SizedBox(height: 16),
           Text(
-            '아직 기록이 없어요',
+            AppStrings.recordEmptyLabel,
             style: TextStyle(fontSize: 16, color: colors.textTertiary),
           ),
         ],

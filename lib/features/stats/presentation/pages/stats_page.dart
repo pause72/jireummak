@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/home/domain/models/wish_stats.dart';
 import '../../../../features/home/presentation/providers/wish_item_provider.dart';
@@ -26,17 +27,17 @@ class StatsPage extends ConsumerWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: _StatCard(label: '참음', value: '${stats.cancelledCount}번', icon: Icons.self_improvement_rounded, color: AppColors.accent)),
+                  Expanded(child: _StatCard(label: AppStrings.myResisted, value: '${stats.cancelledCount}번', icon: Icons.self_improvement_rounded, color: AppColors.accent)),
                   const SizedBox(width: 12),
-                  Expanded(child: _StatCard(label: '구매', value: '${stats.purchasedCount}번', icon: Icons.shopping_bag_outlined, color: AppColors.green)),
+                  Expanded(child: _StatCard(label: AppStrings.myPurchased, value: '${stats.purchasedCount}번', icon: Icons.shopping_bag_outlined, color: AppColors.green)),
                 ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: _StatCard(label: '참기', value: '${stats.waitingCount}개', icon: Icons.pending_actions_outlined, color: AppColors.yellow)),
+                  Expanded(child: _StatCard(label: AppStrings.statsWaitingLabel, value: '${stats.waitingCount}개', icon: Icons.pending_actions_outlined, color: AppColors.yellow)),
                   const SizedBox(width: 12),
-                  Expanded(child: _StatCard(label: '총 등록', value: '${stats.totalCount}개', icon: Icons.list_alt_rounded, color: AppColors.blue)),
+                  Expanded(child: _StatCard(label: AppStrings.myTotalRegistered, value: '${stats.totalCount}개', icon: Icons.list_alt_rounded, color: AppColors.blue)),
                 ],
               ),
               if (stats.decidedCount > 0) ...[
@@ -81,7 +82,7 @@ class _SavedAmountCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '총 절약 금액',
+            AppStrings.myTotalSaved,
             style: TextStyle(
               fontSize: 13,
               color: AppColors.accent,
@@ -102,7 +103,7 @@ class _SavedAmountCard extends StatelessWidget {
           if (stats.spentAmount > 0) ...[
             const SizedBox(height: 8),
             Text(
-              '구매 지출 ${stats.formattedSpent}',
+              AppStrings.statsSpent(stats.formattedSpent),
               style: TextStyle(fontSize: 12, color: colors.textTertiary),
             ),
           ],
@@ -185,7 +186,7 @@ class _SaveRateCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '충동구매 저항률',
+                AppStrings.myResistanceRate,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -214,7 +215,7 @@ class _SaveRateCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '결정한 ${stats.decidedCount}건 중 ${stats.cancelledCount}건 취소',
+            AppStrings.statsDecisionSummary(stats.decidedCount, stats.cancelledCount),
             style: TextStyle(fontSize: 12, color: colors.textTertiary),
           ),
         ],
@@ -265,17 +266,17 @@ class _MotivationCard extends StatelessWidget {
 
   (String, String) _getMessage(WishStats s) {
     if (s.totalCount == 0) {
-      return ('아직 기록이 없어요.', '갖고 싶은 게 생기면 글쓰기 버튼으로 72시간 참기를 시작해보세요.');
+      return (AppStrings.statsEmptyMessage, AppStrings.statsEmptySubMessage);
     }
     if (s.cancelledCount == 0) {
-      return ('아직 취소한 항목이 없어요.', '72시간이 지나면 진짜 필요한지 다시 생각해보세요.');
+      return (AppStrings.statsNoCancelMessage, AppStrings.statsNoCancelSubMessage);
     }
     if (s.saveRate >= 0.8) {
-      return ('대단해요! 충동구매를 잘 참고 있어요.', '절약한 금액으로 더 의미 있는 것에 투자해보세요.');
+      return (AppStrings.statsHighRateMessage, AppStrings.statsHighRateSubMessage);
     }
     if (s.saveRate >= 0.5) {
-      return ('좋은 습관을 만들어가고 있어요.', '72시간 후 다시 생각하면 불필요한 소비가 보여요.');
+      return (AppStrings.statsMidRateMessage, AppStrings.statsMidRateSubMessage);
     }
-    return ('조금씩 더 참아봐요.', '충동구매를 줄이면 소비 습관이 달라져요.');
+    return (AppStrings.statsLowRateMessage, AppStrings.statsLowRateSubMessage);
   }
 }

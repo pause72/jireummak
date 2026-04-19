@@ -34,22 +34,6 @@ String _shortAmount(int amount) {
   return '$amount원';
 }
 
-String _levelBadge(int resistedCount) {
-  if (resistedCount >= 50) return '🏆 Lv.5 절약마스터';
-  if (resistedCount >= 20) return '💎 Lv.4 절약왕';
-  if (resistedCount >= 10) return '🔥 Lv.3 참기고수';
-  if (resistedCount >= 5)  return '💪 Lv.2 절약러';
-  return '🌱 Lv.1 절약 입문';
-}
-
-String _progressFeedback(double progress) {
-  if (progress >= 1.0) return '목표 달성! 🏆';
-  if (progress >= 0.9) return '마지막 고비예요 ✨';
-  if (progress >= 0.6) return '거의 다 왔어요 🔥';
-  if (progress >= 0.3) return '잘 하고 있어요 💪';
-  if (progress >= 0.1) return '좋은 출발이에요 👍';
-  return '아직 시작이에요 🚀';
-}
 
 class MyPage extends ConsumerWidget {
   const MyPage({super.key});
@@ -258,7 +242,7 @@ class _GoalAndStatsCard extends ConsumerWidget {
                     children: [
                       Icon(hasGoal ? Icons.edit_rounded : Icons.add_rounded, size: 11, color: AppColors.accent),
                       const SizedBox(width: 3),
-                      Text(hasGoal ? '수정' : '추가', style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w500)),
+                      Text(hasGoal ? AppStrings.goalEditShortLabel : AppStrings.goalAddShortLabel, style: const TextStyle(fontSize: 11, color: AppColors.accent, fontWeight: FontWeight.w500)),
                     ],
                   ),
                 ),
@@ -271,7 +255,7 @@ class _GoalAndStatsCard extends ConsumerWidget {
           if (!hasGoal)
             GestureDetector(
               onTap: () => _showAddDialog(context, ref),
-              child: Text('+ 목표를 설정해보세요 🎯', style: TextStyle(fontSize: 13, color: colors.textTertiary)),
+              child: Text(AppStrings.goalEmptyAdd, style: TextStyle(fontSize: 13, color: colors.textTertiary)),
             )
           else ...[
             // 목표명
@@ -370,7 +354,7 @@ class _GoalAndStatsCard extends ConsumerWidget {
             const SizedBox(height: 6),
             // 진행률 피드백 문구
             Text(
-              _progressFeedback(progress),
+              AppStrings.progressFeedback(progress),
               style: TextStyle(
                 fontSize: 12,
                 color: isReached ? AppColors.green : AppColors.accent,
@@ -594,7 +578,7 @@ class _ProfileCard extends StatelessWidget {
               border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
             ),
             child: Text(
-              _levelBadge(stats.cancelledCount),
+              AppStrings.levelBadge(stats.cancelledCount),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent),
             ),
           ),
@@ -1112,7 +1096,7 @@ class _NicknameEditDialogState extends ConsumerState<_NicknameEditDialog> {
   Future<void> _submit() async {
     final nick = _controller.text.trim();
     if (nick.isEmpty) {
-      setState(() => _errorMessage = '닉네임을 입력해주세요.');
+      setState(() => _errorMessage = AppStrings.nicknameRequired);
       return;
     }
 
@@ -1150,7 +1134,7 @@ class _NicknameEditDialogState extends ConsumerState<_NicknameEditDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            canChange ? '30일에 한 번 변경할 수 있어요.' : '${nicknameState.daysUntilNextChange}일 후에 변경할 수 있어요.',
+            canChange ? AppStrings.nicknameChangeInfo : AppStrings.nicknameChangeDays(nicknameState.daysUntilNextChange),
             style: TextStyle(
               color: canChange ? colors.textSecondary : AppColors.yellow,
               fontSize: 13,
@@ -1294,7 +1278,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
       titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       title: Text(
-        '어떤 목표를 위해 참을까요?',
+        AppStrings.goalAddDialogTitle,
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary, height: 1.3),
       ),
       content: SingleChildScrollView(
@@ -1322,7 +1306,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
               maxLength: 20,
               style: TextStyle(color: colors.textPrimary, fontSize: 14),
               onChanged: (_) { if (_titleError != null) setState(() => _titleError = null); },
-              decoration: _goalInputDecoration(colors, '예: 내집마련, 여행가기, 아이폰 구매', _titleError),
+              decoration: _goalInputDecoration(colors, AppStrings.goalTitleHintAdd, _titleError),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -1335,7 +1319,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
                 setState(() {});
               },
               onSubmitted: (_) => _submit(),
-              decoration: _goalInputDecoration(colors, '목표 금액', _amountError, prefix: '₩ '),
+              decoration: _goalInputDecoration(colors, AppStrings.goalAmountFieldHint, _amountError, prefix: '₩ '),
             ),
             const SizedBox(height: 8),
             _QuickAmountChips(onAdd: _addAmount, colors: colors),
@@ -1349,7 +1333,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  '이 목표를 위해 소비를 줄여보세요 💪',
+                  AppStrings.goalMotivation,
                   style: TextStyle(fontSize: 12, color: AppColors.green, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1364,7 +1348,7 @@ class _AddGoalDialogState extends State<_AddGoalDialog> {
         ),
         TextButton(
           onPressed: _submit,
-          child: const Text('목표 설정하기', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+          child: const Text(AppStrings.goalSetButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
         ),
       ],
     );
@@ -1445,7 +1429,7 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
       titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       title: Text(
-        '목표를 수정할까요?',
+        AppStrings.goalEditDialogTitle,
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: colors.textPrimary),
       ),
       content: SingleChildScrollView(
@@ -1464,7 +1448,7 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
               maxLength: 20,
               style: TextStyle(color: colors.textPrimary, fontSize: 14),
               onChanged: (_) { if (_titleError != null) setState(() => _titleError = null); },
-              decoration: _goalInputDecoration(colors, '예: 내집마련, 여행가기', _titleError),
+              decoration: _goalInputDecoration(colors, AppStrings.goalTitleHintEdit, _titleError),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -1477,7 +1461,7 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
                 setState(() {});
               },
               onSubmitted: (_) => _submit(),
-              decoration: _goalInputDecoration(colors, '목표 금액', _amountError, prefix: '₩ '),
+              decoration: _goalInputDecoration(colors, AppStrings.goalAmountFieldHint, _amountError, prefix: '₩ '),
             ),
             const SizedBox(height: 8),
             _QuickAmountChips(onAdd: _addAmount, colors: colors),
@@ -1491,7 +1475,7 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  '이 목표를 위해 소비를 줄여보세요 💪',
+                  AppStrings.goalMotivation,
                   style: TextStyle(fontSize: 12, color: AppColors.green, fontWeight: FontWeight.w500),
                 ),
               ),
@@ -1517,7 +1501,7 @@ class _UpdateGoalDialogState extends State<_UpdateGoalDialog> {
         ),
         TextButton(
           onPressed: _submit,
-          child: const Text('목표 업데이트', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
+          child: const Text(AppStrings.goalUpdateButton, style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w700)),
         ),
       ],
     );

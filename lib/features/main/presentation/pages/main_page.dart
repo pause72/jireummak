@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../explore/presentation/pages/explore_page.dart';
 import '../../../home/presentation/pages/home_page.dart';
@@ -70,22 +71,22 @@ class _BottomNav extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(Icons.pending_actions_outlined),
             activeIcon: Icon(Icons.pending_actions),
-            label: '참기',
+            label: AppStrings.navResist,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
             activeIcon: Icon(Icons.add_circle),
-            label: '기록',
+            label: AppStrings.navRecord,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.explore_outlined),
             activeIcon: Icon(Icons.explore),
-            label: '공유',
+            label: AppStrings.navExplore,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
-            label: '마이',
+            label: AppStrings.navMy,
           ),
         ],
       ),
