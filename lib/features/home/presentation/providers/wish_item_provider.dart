@@ -59,11 +59,13 @@ class WishItemNotifier extends _$WishItemNotifier {
   }
 
   Future<void> deleteItem(String id) async {
+    final previous = state.valueOrNull ?? [];
+    state = AsyncValue.data(previous.where((item) => item.id != id).toList());
     try {
       await ref.read(wishItemRepositoryProvider).deleteItem(id);
       await NotificationService().cancelWishNotifications(id);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (_) {
+      state = AsyncValue.data(previous);
     }
   }
 

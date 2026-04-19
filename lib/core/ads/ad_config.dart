@@ -14,13 +14,13 @@ class AdConfig {
       ? 'ca-app-pub-3940256099942544/6300978111'
       : 'ca-app-pub-3940256099942544/2934735716';
 
-  // TODO: AdMob 콘솔에서 Native 타입 광고 유닛 생성 후 아래 Android ID를 교체하세요
+  // TODO: Play Store 게시 후 실제 ID로 교체 — ca-app-pub-9892920356540798/5997045287
   static String get nativeAdUnitId => Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/2247696110' // 테스트 ID — 실제 Native 유닛 ID로 교체 필요
+      ? 'ca-app-pub-3940256099942544/2247696110'
       : 'ca-app-pub-3940256099942544/3986624511';
 
-  // TODO: AdMob 콘솔에서 리워드 광고 ID로 교체하세요
+  // TODO: Play Store 게시 후 실제 ID로 교체 — ca-app-pub-9892920356540798/7534475318
   static String get rewardedAdUnitId => Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/5224354917' // 테스트 ID
-      : 'ca-app-pub-3940256099942544/1712485313'; // 테스트 ID
+      ? 'ca-app-pub-3940256099942544/5224354917'
+      : 'ca-app-pub-3940256099942544/1712485313';
 }

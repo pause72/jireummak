@@ -72,6 +72,7 @@ class FirestoreWishItemRepository implements WishItemRepository {
 
   @override
   Future<void> deleteItem(String id) async {
+    _cached = _cached.where((item) => item.id != id).toList();
     await _col.doc(id).delete();
   }
 
