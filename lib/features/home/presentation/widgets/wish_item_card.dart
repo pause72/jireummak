@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -62,6 +63,84 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
         if (mounted) _hintController.forward();
       });
     }
+  }
+
+  static const _resistMessages = [
+    ('🎉', '잘 참았어요!', '72시간을 버텨낸 현명한 선택이에요.\n이 절약이 쌓여 큰 자산이 될 거예요.'),
+    ('💪', '충동을 이겼어요!', '참을 때마다 조금씩 더 강해지고 있어요.\n오늘의 절약, 정말 잘했어요!'),
+    ('🌱', '훌륭해요!', '72시간이 지나 마음이 식었다면,\n그건 처음부터 충동이었던 거예요.'),
+    ('✨', '멋진 선택이에요!', '사지 않는 것도 훌륭한 소비예요.\n절약한 돈은 더 의미 있는 곳에 쓰일 거예요.'),
+    ('🏆', '대단해요!', '스스로를 이겨낸 오늘이 자랑스러워요.\n이 습관이 미래를 바꿔줄 거예요.'),
+  ];
+
+  static const _purchaseMessages = [
+    ('🛒', '72시간 고민 끝의 선택이에요!', '구매 전 최저가를 꼭 확인하세요.\n네이버쇼핑이나 다나와를 활용해보세요!'),
+    ('💡', '충분히 생각한 소비예요!', '구매 전 리뷰를 한 번 더 확인하고,\n최저가 알림을 설정해두면 더 좋아요.'),
+    ('✅', '현명한 소비예요!', '충동이 아닌 확신으로 내린 결정이에요.\n좋은 가격에 구매하길 바라요!'),
+    ('💰', '진짜 필요한 거니까 사는 거예요!', '구매 전 최저가 한 번만 더 확인해봐요.\n잘 쓰면 그것도 현명한 소비예요.'),
+  ];
+
+  void _showEncouragement(BuildContext context, {required bool resisted}) {
+    final messages = resisted ? _resistMessages : _purchaseMessages;
+    final msg = messages[Random().nextInt(messages.length)];
+    final colors = context.colors;
+    final accentColor = resisted ? AppColors.green : AppColors.accent;
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 32, 24, 40),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(msg.$1, style: const TextStyle(fontSize: 52)),
+            const SizedBox(height: 16),
+            Text(
+              msg.$2,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              msg.$3,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: colors.textSecondary,
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(sheetCtx).pop(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: accentColor,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text(
+                  '좋아요!',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -373,9 +452,12 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
                           icon: Icons.self_improvement_rounded,
                           color: AppColors.green,
                           textColor: Colors.white,
-                          onTap: () => ref
-                              .read(wishItemNotifierProvider.notifier)
-                              .updateStatus(item.id, WishItemStatus.cancelled),
+                          onTap: () {
+                            _showEncouragement(context, resisted: true);
+                            ref
+                                .read(wishItemNotifierProvider.notifier)
+                                .updateStatus(item.id, WishItemStatus.cancelled);
+                          },
                         ),
                       ),
                     ],
@@ -449,6 +531,7 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
             TextButton(
               onPressed: () {
                 Navigator.of(ctx).pop();
+                _showEncouragement(context, resisted: false);
                 ref.read(wishItemNotifierProvider.notifier)
                     .updateStatus(widget.item.id, WishItemStatus.purchased);
               },

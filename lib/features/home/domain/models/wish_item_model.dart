@@ -15,6 +15,7 @@ abstract class WishItem with _$WishItem {
     String? category,
     String? reason,
     required DateTime createdAt,
+    DateTime? decidedAt,
     @Default(WishItemStatus.waiting) WishItemStatus status,
   }) = _WishItem;
 

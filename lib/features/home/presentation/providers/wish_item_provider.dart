@@ -68,11 +68,18 @@ class WishItemNotifier extends _$WishItemNotifier {
   }
 
   Future<void> updateStatus(String id, WishItemStatus status) async {
+    final previous = state.valueOrNull ?? [];
+    final now = DateTime.now();
+    state = AsyncValue.data(
+      previous
+          .map((item) => item.id == id ? item.copyWith(status: status, decidedAt: now) : item)
+          .toList(),
+    );
     try {
       await ref.read(wishItemRepositoryProvider).updateStatus(id, status);
       await NotificationService().cancelWishNotifications(id);
-    } catch (e, st) {
-      state = AsyncValue.error(e, st);
+    } catch (_) {
+      state = AsyncValue.data(previous);
     }
   }
 

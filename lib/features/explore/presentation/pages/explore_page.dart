@@ -81,7 +81,11 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
       nativeTemplateStyle: NativeTemplateStyle(templateType: TemplateType.medium),
       listener: NativeAdListener(
         onAdLoaded: (_) => setState(() => _isNativeAdLoaded = true),
-        onAdFailedToLoad: (ad, _) => ad.dispose(),
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('[ExplorePage] NativeAd failed to load: $error');
+          ad.dispose();
+          _nativeAd = null;
+        },
       ),
     )..load();
   }
@@ -92,13 +96,15 @@ class _ExplorePageState extends ConsumerState<ExplorePage> {
     super.dispose();
   }
 
-  // 5개 게시글마다 네이티브 광고 삽입
+  // 3개 게시글마다 네이티브 광고 1회 삽입
   List<Object> _buildMixedList(List<CommunityPost> posts) {
     final List<Object> mixed = [];
+    bool adInserted = false;
     for (int i = 0; i < posts.length; i++) {
       mixed.add(posts[i]);
-      if ((i + 1) % 5 == 0 && _isNativeAdLoaded) {
+      if (!adInserted && (i + 1) % 3 == 0 && _isNativeAdLoaded) {
         mixed.add(_AdSlot.native);
+        adInserted = true;
       }
     }
     return mixed;

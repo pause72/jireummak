@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 
-import '../../../../core/ads/ad_config.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/home/domain/models/wish_item_model.dart';
 import '../../../../features/home/domain/models/wish_item_status.dart';
@@ -22,41 +20,6 @@ class RecordPage extends ConsumerStatefulWidget {
 class _RecordPageState extends ConsumerState<RecordPage> {
   _Filter _filter = _Filter.all;
   _Sort _sort = _Sort.recent;
-
-  // 리스트 3개마다 광고 슬롯 — 최대 3개까지 로드
-  static const _maxAdSlots = 3;
-  late final List<BannerAd?> _bannerAds;
-  late final List<bool> _bannerAdsLoaded;
-
-  @override
-  void initState() {
-    super.initState();
-    _bannerAds = List<BannerAd?>.filled(_maxAdSlots, null, growable: false);
-    _bannerAdsLoaded = List<bool>.filled(_maxAdSlots, false, growable: false);
-    for (var i = 0; i < _maxAdSlots; i++) {
-      _loadBannerAd(i);
-    }
-  }
-
-  void _loadBannerAd(int slot) {
-    _bannerAds[slot] = BannerAd(
-      adUnitId: AdConfig.bannerAdUnitId,
-      size: AdSize.banner,
-      request: const AdRequest(),
-      listener: BannerAdListener(
-        onAdLoaded: (_) => setState(() => _bannerAdsLoaded[slot] = true),
-        onAdFailedToLoad: (ad, _) => ad.dispose(),
-      ),
-    )..load();
-  }
-
-  @override
-  void dispose() {
-    for (final ad in _bannerAds) {
-      ad?.dispose();
-    }
-    super.dispose();
-  }
 
   List<WishItem> _applyFilter(List<WishItem> items) {
     final byFilter = switch (_filter) {
@@ -81,20 +44,6 @@ class _RecordPageState extends ConsumerState<RecordPage> {
     return byFilter;
   }
 
-  // 아이템 3개마다 int(슬롯 인덱스)를 광고 센티넬로 삽입
-  List<Object> _buildMixedList(List<WishItem> items) {
-    final result = <Object>[];
-    var adSlot = 0;
-    for (var i = 0; i < items.length; i++) {
-      result.add(items[i]);
-      if ((i + 1) % 3 == 0 && i < items.length - 1 && adSlot < _maxAdSlots) {
-        result.add(adSlot);
-        adSlot++;
-      }
-    }
-    return result;
-  }
-
   @override
   Widget build(BuildContext context) {
     final all = ref.watch(allItemsProvider);
@@ -106,7 +55,6 @@ class _RecordPageState extends ConsumerState<RecordPage> {
         all.where((i) => i.status == WishItemStatus.purchased).toList();
 
     final filtered = _applyFilter(all);
-    final mixedList = _buildMixedList(filtered);
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -135,36 +83,17 @@ class _RecordPageState extends ConsumerState<RecordPage> {
                 ),
               ],
             ),
-            // ── 리스트 (3개마다 광고 삽입)
+            // ── 리스트
             Expanded(
               child: filtered.isEmpty
                   ? _EmptyHistory(colors: colors)
                   : ListView.builder(
                       padding: const EdgeInsets.fromLTRB(16, 4, 16, 80),
-                      itemCount: mixedList.length,
-                      itemBuilder: (_, i) {
-                        final item = mixedList[i];
-                        // 광고 슬롯
-                        if (item is int) {
-                          final slot = item;
-                          if (!_bannerAdsLoaded[slot]) {
-                            return const SizedBox.shrink();
-                          }
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: SizedBox(
-                              width: double.infinity,
-                              height: _bannerAds[slot]!.size.height.toDouble(),
-                              child: AdWidget(ad: _bannerAds[slot]!),
-                            ),
-                          );
-                        }
-                        // 카드
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _HistoryItemCard(item: item as WishItem),
-                        );
-                      },
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _HistoryItemCard(item: filtered[i]),
+                      ),
                     ),
             ),
           ],
@@ -582,7 +511,8 @@ class _HistoryItemCard extends ConsumerWidget {
   }
 
   String _dateText(WishItem item) {
-    final diff = DateTime.now().difference(item.createdAt);
+    final base = item.decidedAt ?? item.createdAt;
+    final diff = DateTime.now().difference(base);
     final ago = diff.inDays > 0
         ? '${diff.inDays}일 전'
         : diff.inHours > 0

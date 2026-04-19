@@ -60,7 +60,14 @@ class FirestoreWishItemRepository implements WishItemRepository {
 
   @override
   Future<void> updateStatus(String id, WishItemStatus status) async {
-    await _col.doc(id).update({'status': status.name});
+    final now = DateTime.now();
+    _cached = _cached
+        .map((item) => item.id == id ? item.copyWith(status: status, decidedAt: now) : item)
+        .toList();
+    await _col.doc(id).update({
+      'status': status.name,
+      'decidedAt': Timestamp.fromDate(now),
+    });
   }
 
   @override
@@ -81,6 +88,9 @@ class FirestoreWishItemRepository implements WishItemRepository {
       (e) => e.name == statusStr,
       orElse: () => WishItemStatus.waiting,
     );
+    final decidedAt = data['decidedAt'] != null
+        ? (data['decidedAt'] as Timestamp).toDate()
+        : null;
     return WishItem(
       id: doc.id,
       name: data['name'] as String,
@@ -88,6 +98,7 @@ class FirestoreWishItemRepository implements WishItemRepository {
       category: data['category'] as String?,
       reason: data['reason'] as String?,
       createdAt: createdAt,
+      decidedAt: decidedAt,
       status: status,
     );
   }
@@ -98,6 +109,7 @@ class FirestoreWishItemRepository implements WishItemRepository {
         'category': item.category,
         'reason': item.reason,
         'createdAt': Timestamp.fromDate(item.createdAt),
+        if (item.decidedAt != null) 'decidedAt': Timestamp.fromDate(item.decidedAt!),
         'status': item.status.name,
       };
 }
