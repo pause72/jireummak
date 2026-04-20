@@ -19,6 +19,14 @@ _WishItem _$WishItemFromJson(Map<String, dynamic> json) => _WishItem(
   status:
       $enumDecodeNullable(_$WishItemStatusEnumMap, json['status']) ??
       WishItemStatus.waiting,
+  buyReasons: (json['buyReasons'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
+  resistReasons: (json['resistReasons'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList() ??
+      const [],
 );
 
 Map<String, dynamic> _$WishItemToJson(_WishItem instance) => <String, dynamic>{
@@ -30,6 +38,8 @@ Map<String, dynamic> _$WishItemToJson(_WishItem instance) => <String, dynamic>{
   'createdAt': instance.createdAt.toIso8601String(),
   'decidedAt': instance.decidedAt?.toIso8601String(),
   'status': _$WishItemStatusEnumMap[instance.status]!,
+  'buyReasons': instance.buyReasons,
+  'resistReasons': instance.resistReasons,
 };
 
 const _$WishItemStatusEnumMap = {

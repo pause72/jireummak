@@ -69,6 +69,18 @@ class WishItemNotifier extends _$WishItemNotifier {
     }
   }
 
+  Future<void> updateReasons(String id, {required List<String> buyReasons, required List<String> resistReasons}) async {
+    final previous = state.valueOrNull ?? [];
+    state = AsyncValue.data(
+      previous.map((item) => item.id == id ? item.copyWith(buyReasons: buyReasons, resistReasons: resistReasons) : item).toList(),
+    );
+    try {
+      await ref.read(wishItemRepositoryProvider).updateReasons(id, buyReasons: buyReasons, resistReasons: resistReasons);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   Future<void> updateStatus(String id, WishItemStatus status) async {
     final previous = state.valueOrNull ?? [];
     final now = DateTime.now();

@@ -185,6 +185,18 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
     if (value == 'delete') _confirmDelete(this.context);
   }
 
+  void _showReasonsSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: context.colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _ReasonsSheet(item: widget.item, ref: ref),
+    );
+  }
+
   void _showEditSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -275,6 +287,9 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
       child: SlideTransition(
         position: _hintAnim,
         child: GestureDetector(
+          onTap: expired
+              ? null
+              : () => _showReasonsSheet(context),
           onLongPressStart: expired
               ? null
               : (details) {
@@ -526,6 +541,682 @@ class _WishItemCardState extends ConsumerState<WishItemCard>
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── 이유 입력 바텀시트 ──────────────────────────────────────────
+
+const _buyChips = AppStrings.buyChips;
+const _resistChips = AppStrings.resistChips;
+
+class _ReasonsSheet extends StatefulWidget {
+  const _ReasonsSheet({required this.item, required this.ref});
+
+  final WishItem item;
+  final WidgetRef ref;
+
+  @override
+  State<_ReasonsSheet> createState() => _ReasonsSheetState();
+}
+
+class _ReasonsSheetState extends State<_ReasonsSheet> {
+  late List<TextEditingController> _buyControllers;
+  late List<TextEditingController> _resistControllers;
+  Set<String> _selectedBuyChips = {};
+  Set<String> _selectedResistChips = {};
+  bool _buyExpanded = false;
+  bool _resistExpanded = true;
+  bool _isSubmitting = false;
+
+  TextEditingController _makeCtrl(String text) {
+    final c = TextEditingController(text: text);
+    c.addListener(_onTextChanged);
+    return c;
+  }
+
+  void _disposeCtrl(TextEditingController c) {
+    c.removeListener(_onTextChanged);
+    c.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final buy = widget.item.buyReasons;
+    final resist = widget.item.resistReasons;
+    _buyControllers = buy.isEmpty
+        ? [_makeCtrl('')]
+        : buy.map(_makeCtrl).toList();
+    _resistControllers = resist.isEmpty
+        ? [_makeCtrl('')]
+        : resist.map(_makeCtrl).toList();
+    _syncSelectedChips();
+  }
+
+  void _onTextChanged() => setState(_syncSelectedChips);
+
+  void _syncSelectedChips() {
+    final buyTexts = _buyControllers.map((c) => c.text.trim()).toSet();
+    _selectedBuyChips = _buyChips.where(buyTexts.contains).toSet();
+    final resistTexts = _resistControllers.map((c) => c.text.trim()).toSet();
+    _selectedResistChips = _resistChips.where(resistTexts.contains).toSet();
+  }
+
+  @override
+  void dispose() {
+    for (final c in [..._buyControllers, ..._resistControllers]) {
+      _disposeCtrl(c);
+    }
+    super.dispose();
+  }
+
+  void _addField(List<TextEditingController> controllers) {
+    setState(() => controllers.add(_makeCtrl('')));
+  }
+
+  void _removeField(List<TextEditingController> controllers, int index) {
+    setState(() {
+      _disposeCtrl(controllers[index]);
+      controllers.removeAt(index);
+      if (controllers.isEmpty) controllers.add(_makeCtrl(''));
+      _syncSelectedChips();
+    });
+  }
+
+  void _toggleChip(
+    List<TextEditingController> controllers,
+    Set<String> selectedSet,
+    String text,
+  ) {
+    setState(() {
+      if (selectedSet.contains(text)) {
+        final idx = controllers.indexWhere((c) => c.text.trim() == text);
+        if (idx >= 0) {
+          if (controllers.length == 1) {
+            controllers[idx].clear();
+          } else {
+            _disposeCtrl(controllers[idx]);
+            controllers.removeAt(idx);
+          }
+        }
+      } else {
+        final emptyIdx = controllers.indexWhere((c) => c.text.trim().isEmpty);
+        if (emptyIdx >= 0) {
+          controllers[emptyIdx].text = text;
+        } else {
+          controllers.add(_makeCtrl(text));
+        }
+      }
+      _syncSelectedChips();
+    });
+  }
+
+  int get _buyCount =>
+      _buyControllers.where((c) => c.text.trim().isNotEmpty).length;
+  int get _resistCount =>
+      _resistControllers.where((c) => c.text.trim().isNotEmpty).length;
+
+  String _feedbackMessage(int buy, int resist) {
+    if (resist > buy) return AppStrings.reasonsFeedbackResistMore;
+    if (buy > resist) return AppStrings.reasonsFeedbackBuyMore;
+    return AppStrings.reasonsFeedbackDefault;
+  }
+
+  Future<void> _submit() async {
+    setState(() => _isSubmitting = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final buyReasons = _buyControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    final resistReasons = _resistControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    await widget.ref.read(wishItemNotifierProvider.notifier).updateReasons(
+          widget.item.id,
+          buyReasons: buyReasons,
+          resistReasons: resistReasons,
+        );
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(_feedbackMessage(buyReasons.length, resistReasons.length)),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final hasAny = _buyCount + _resistCount > 0;
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── 헤더 ──
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.item.name,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: colors.textPrimary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      AppStrings.reasonsSheetSubtitle,
+                      style: TextStyle(fontSize: 12, color: colors.textTertiary),
+                    ),
+                  ],
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.of(context).pop(),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: Icon(Icons.close, size: 20, color: colors.textTertiary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // ── 필요없는 이유 (상단 배치 + 기본 펼침 — 앱 핵심) ──
+          _ReasonSection(
+            label: AppStrings.reasonsResistLabel,
+            icon: Icons.remove_rounded,
+            labelColor: AppColors.green,
+            chips: _resistChips,
+            selectedChips: _selectedResistChips,
+            controllers: _resistControllers,
+            colors: colors,
+            expanded: _resistExpanded,
+            onToggle: () => setState(() => _resistExpanded = !_resistExpanded),
+            onChipTap: (text) => _toggleChip(_resistControllers, _selectedResistChips, text),
+            onAdd: () => _addField(_resistControllers),
+            onRemove: (i) => _removeField(_resistControllers, i),
+          ),
+          const SizedBox(height: 10),
+
+          // ── 필요한 이유 (하단 배치 + 기본 접힘) ──
+          _ReasonSection(
+            label: AppStrings.reasonsBuyLabel,
+            icon: Icons.add_rounded,
+            labelColor: AppColors.accent,
+            chips: _buyChips,
+            selectedChips: _selectedBuyChips,
+            controllers: _buyControllers,
+            colors: colors,
+            expanded: _buyExpanded,
+            onToggle: () => setState(() => _buyExpanded = !_buyExpanded),
+            onChipTap: (text) => _toggleChip(_buyControllers, _selectedBuyChips, text),
+            onAdd: () => _addField(_buyControllers),
+            onRemove: (i) => _removeField(_buyControllers, i),
+          ),
+
+          // ── 비율 시각화 ──
+          if (hasAny) ...[
+            const SizedBox(height: 12),
+            _RatioBar(buyCount: _buyCount, resistCount: _resistCount, colors: colors),
+          ],
+
+          const SizedBox(height: 14),
+
+          // ── 미래 관점 힌트 ──
+          Row(
+            children: [
+              Icon(Icons.chat_bubble_outline_rounded,
+                  size: 13, color: colors.textTertiary),
+              const SizedBox(width: 6),
+              Text(
+                AppStrings.reasonsHint1,
+                style: TextStyle(fontSize: 12, color: colors.textTertiary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(Icons.access_time_rounded,
+                  size: 13, color: colors.textTertiary),
+              const SizedBox(width: 6),
+              Text(
+                AppStrings.reasonsHint2,
+                style: TextStyle(fontSize: 12, color: colors.textTertiary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+
+          // ── CTA ──
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: _isSubmitting ? null : _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.accent,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: _isSubmitting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Text(
+                      AppStrings.reasonsCtaButton,
+                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 접기/펼치기 섹션 ──────────────────────────────────────────
+
+class _ReasonSection extends StatelessWidget {
+  const _ReasonSection({
+    required this.label,
+    required this.icon,
+    required this.labelColor,
+    required this.chips,
+    required this.selectedChips,
+    required this.controllers,
+    required this.colors,
+    required this.expanded,
+    required this.onToggle,
+    required this.onChipTap,
+    required this.onAdd,
+    required this.onRemove,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color labelColor;
+  final List<String> chips;
+  final Set<String> selectedChips;
+  final List<TextEditingController> controllers;
+  final AppColors colors;
+  final bool expanded;
+  final VoidCallback onToggle;
+  final ValueChanged<String> onChipTap;
+  final VoidCallback onAdd;
+  final void Function(int index) onRemove;
+
+  int get _filledCount =>
+      controllers.where((c) => c.text.trim().isNotEmpty).length;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      decoration: BoxDecoration(
+        color: colors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: expanded
+              ? labelColor.withValues(alpha: 0.45)
+              : colors.border,
+          width: expanded ? 1.5 : 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          // 헤더 (항상 보임)
+          GestureDetector(
+            onTap: onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              child: Row(
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: labelColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, size: 13, color: labelColor),
+                  ),
+                  const SizedBox(width: 7),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: labelColor,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (_filledCount > 0) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: labelColor.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        AppStrings.reasonsFilledCount(_filledCount),
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: labelColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  AnimatedRotation(
+                    turns: expanded ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 200),
+                    child: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 18,
+                      color: colors.textTertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // 펼쳐지는 내용
+          AnimatedCrossFade(
+            firstChild: const SizedBox(width: double.infinity),
+            secondChild: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Divider(height: 1, color: colors.border),
+                  const SizedBox(height: 10),
+                  // 추천 칩
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: chips
+                        .map(
+                          (chip) => _SelectableChip(
+                            text: chip,
+                            selected: selectedChips.contains(chip),
+                            color: labelColor,
+                            onTap: () => onChipTap(chip),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                  const SizedBox(height: 10),
+                  // 동적 입력 필드 목록
+                  ...List.generate(controllers.length, (i) {
+                    final isOnly = controllers.length == 1;
+                    final isEmpty = controllers[i].text.trim().isEmpty;
+                    return Padding(
+                      padding: EdgeInsets.only(top: i > 0 ? 6 : 0),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _EditField(
+                              controller: controllers[i],
+                              hint: AppStrings.reasonsFieldHint,
+                              maxLength: 50,
+                            ),
+                          ),
+                          if (!(isOnly && isEmpty)) ...[
+                            const SizedBox(width: 4),
+                            GestureDetector(
+                              onTap: () => onRemove(i),
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 16,
+                                  color: colors.textTertiary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 8),
+                  // 추가 버튼
+                  GestureDetector(
+                    onTap: onAdd,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add_rounded, size: 14, color: labelColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          AppStrings.reasonsAddButton,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: labelColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            crossFadeState:
+                expanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
+            duration: const Duration(milliseconds: 200),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── 선택형 칩 (scale 애니 + checkmark) ──────────────────────────
+
+class _SelectableChip extends StatefulWidget {
+  const _SelectableChip({
+    required this.text,
+    required this.selected,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String text;
+  final bool selected;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  State<_SelectableChip> createState() => _SelectableChipState();
+}
+
+class _SelectableChipState extends State<_SelectableChip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      value: 1,
+    );
+    _scale = Tween(begin: 0.92, end: 1.0)
+        .animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleTap() async {
+    await _ctrl.reverse();
+    widget.onTap();
+    _ctrl.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = widget.selected;
+    return ScaleTransition(
+      scale: _scale,
+      child: GestureDetector(
+        onTap: _handleTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 160),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected
+                ? widget.color.withValues(alpha: 0.18)
+                : widget.color.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected
+                  ? widget.color.withValues(alpha: 0.7)
+                  : widget.color.withValues(alpha: 0.25),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                child: selected
+                    ? Padding(
+                        key: const ValueKey('check'),
+                        padding: const EdgeInsets.only(right: 4),
+                        child: Icon(Icons.check_rounded,
+                            size: 12, color: widget.color),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('empty')),
+              ),
+              Text(
+                widget.text,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: widget.color,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ── 비율 바 ────────────────────────────────────────────────────
+
+class _RatioBar extends StatelessWidget {
+  const _RatioBar({
+    required this.buyCount,
+    required this.resistCount,
+    required this.colors,
+  });
+
+  final int buyCount;
+  final int resistCount;
+  final AppColors colors;
+
+  @override
+  Widget build(BuildContext context) {
+    final total = buyCount + resistCount;
+    final buyRatio = total == 0 ? 0.5 : buyCount / total;
+    final String label;
+    if (buyCount == resistCount) {
+      label = AppStrings.reasonsRatioEqual;
+    } else if (buyCount > resistCount) {
+      label = AppStrings.reasonsRatioBuyMore;
+    } else {
+      label = AppStrings.reasonsRatioResistMore;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(Icons.add_rounded, size: 12, color: AppColors.accent),
+            const SizedBox(width: 2),
+            Text(
+              '$buyCount',
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Stack(
+                  children: [
+                    Container(
+                        height: 6,
+                        color: AppColors.green.withValues(alpha: 0.25)),
+                    FractionallySizedBox(
+                      widthFactor: buyRatio,
+                      child: Container(
+                          height: 6,
+                          color: AppColors.accent.withValues(alpha: 0.7)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Icon(Icons.remove_rounded, size: 12, color: AppColors.green),
+            const SizedBox(width: 2),
+            Text(
+              '$resistCount',
+              style: TextStyle(
+                  fontSize: 11,
+                  color: AppColors.green,
+                  fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(label,
+            style: TextStyle(fontSize: 11, color: colors.textTertiary)),
+      ],
     );
   }
 }

@@ -242,6 +242,31 @@ class AppStrings {
   static const cardEditSubmit = '수정 완료';
   static const encouragementButton = '좋아요!';
 
+  // ── 이유 기록 바텀시트 ────────────────────────────────────
+  static const reasonsBuyLabel = '필요한 이유';
+  static const reasonsResistLabel = '필요없는 이유';
+  static const reasonsSheetSubtitle = '간단히 적어보면 충동이 줄어요 (선택)';
+  static const reasonsFieldHint = '이유 입력 (선택)';
+  static const reasonsAddButton = '이유 추가';
+  static const reasonsCtaButton = '기록';
+  static const reasonsHint1 = '3일 뒤에도 이 이유가 유효할까요?';
+  static const reasonsHint2 = '72시간 뒤의 나에게 맡겨보세요';
+
+  // 비율바 레이블
+  static const reasonsRatioEqual = '필요한 이유와 필요없는 이유가 같아요';
+  static const reasonsRatioBuyMore = '필요한 이유가 더 많아요 — 3일 뒤에 다시 확인해봐요';
+  static const reasonsRatioResistMore = '필요없는 이유가 더 많아요 💪';
+
+  // 저장 후 피드백 스낵바
+  static const reasonsFeedbackDefault = '이미 충분히 고민하고 있어요 👍';
+  static const reasonsFeedbackResistMore = '필요없는 이유가 더 많아요. 72시간 뒤에 다시 생각해봐요!';
+  static const reasonsFeedbackBuyMore = '필요한 이유가 있네요. 3일 뒤에도 같은 마음인지 확인해봐요.';
+  static String reasonsFilledCount(int n) => '$n개';
+
+  // 추천 칩
+  static const buyChips = ['꼭 필요함', '삶의 질 올라갈 듯', '오래 쓸 것 같음', '계속 생각남', '나에게 보상'];
+  static const resistChips = ['이미 비슷한 거 있음', '지금 감정임', '없어도 문제 없음', '가격 부담됨', '나중에도 살 수 있음'];
+
   static const resistMessages = <(String, String, String)>[
     ('🎉', '잘 참았어요!', '72시간을 버텨낸 현명한 선택이에요.\n이 절약이 쌓여 큰 자산이 될 거예요.'),
     ('💪', '충동을 이겼어요!', '참을 때마다 조금씩 더 강해지고 있어요.\n오늘의 절약, 정말 잘했어요!'),

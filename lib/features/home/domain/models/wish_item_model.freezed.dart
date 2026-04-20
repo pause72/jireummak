@@ -15,7 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$WishItem {
 
- String get id; String get name; double? get price; String? get category; String? get reason; DateTime get createdAt; DateTime? get decidedAt; WishItemStatus get status;
+ String get id; String get name; double? get price; String? get category; String? get reason; DateTime get createdAt; DateTime? get decidedAt; WishItemStatus get status; List<String> get buyReasons; List<String> get resistReasons;
 /// Create a copy of WishItem
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -28,16 +28,16 @@ $WishItemCopyWith<WishItem> get copyWith => _$WishItemCopyWithImpl<WishItem>(thi
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is WishItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.price, price) || other.price == price)&&(identical(other.category, category) || other.category == category)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is WishItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.price, price) || other.price == price)&&(identical(other.category, category) || other.category == category)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.buyReasons, buyReasons) || other.buyReasons == buyReasons)&&(identical(other.resistReasons, resistReasons) || other.resistReasons == resistReasons));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,price,category,reason,createdAt,decidedAt,status);
+int get hashCode => Object.hash(runtimeType,id,name,price,category,reason,createdAt,decidedAt,status,buyReasons,resistReasons);
 
 @override
 String toString() {
-  return 'WishItem(id: $id, name: $name, price: $price, category: $category, reason: $reason, createdAt: $createdAt, decidedAt: $decidedAt, status: $status)';
+  return 'WishItem(id: $id, name: $name, price: $price, category: $category, reason: $reason, createdAt: $createdAt, decidedAt: $decidedAt, status: $status, buyReasons: $buyReasons, resistReasons: $resistReasons)';
 }
 
 
@@ -48,7 +48,7 @@ abstract mixin class $WishItemCopyWith<$Res>  {
   factory $WishItemCopyWith(WishItem value, $Res Function(WishItem) _then) = _$WishItemCopyWithImpl;
 @useResult
 $Res call({
- String id, String name, double? price, String? category, String? reason, DateTime createdAt, DateTime? decidedAt, WishItemStatus status
+ String id, String name, double? price, String? category, String? reason, DateTime createdAt, DateTime? decidedAt, WishItemStatus status, List<String> buyReasons, List<String> resistReasons
 });
 
 
@@ -65,7 +65,7 @@ class _$WishItemCopyWithImpl<$Res>
 
 /// Create a copy of WishItem
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? price = freezed,Object? category = freezed,Object? reason = freezed,Object? createdAt = null,Object? decidedAt = freezed,Object? status = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? id = null,Object? name = null,Object? price = freezed,Object? category = freezed,Object? reason = freezed,Object? createdAt = null,Object? decidedAt = freezed,Object? status = null,Object? buyReasons = null,Object? resistReasons = null,}) {
   return _then(_self.copyWith(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -75,7 +75,9 @@ as String?,reason: freezed == reason ? _self.reason : reason // ignore: cast_nul
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,decidedAt: freezed == decidedAt ? _self.decidedAt : decidedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as WishItemStatus,
+as WishItemStatus,buyReasons: null == buyReasons ? _self.buyReasons : buyReasons // ignore: cast_nullable_to_non_nullable
+as List<String>,resistReasons: null == resistReasons ? _self.resistReasons : resistReasons // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 
@@ -160,10 +162,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  double? price,  String? category,  String? reason,  DateTime createdAt,  DateTime? decidedAt,  WishItemStatus status)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( String id,  String name,  double? price,  String? category,  String? reason,  DateTime createdAt,  DateTime? decidedAt,  WishItemStatus status,  List<String> buyReasons,  List<String> resistReasons)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _WishItem() when $default != null:
-return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_that.createdAt,_that.decidedAt,_that.status);case _:
+return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_that.createdAt,_that.decidedAt,_that.status,_that.buyReasons,_that.resistReasons);case _:
   return orElse();
 
 }
@@ -181,10 +183,10 @@ return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  double? price,  String? category,  String? reason,  DateTime createdAt,  DateTime? decidedAt,  WishItemStatus status)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( String id,  String name,  double? price,  String? category,  String? reason,  DateTime createdAt,  DateTime? decidedAt,  WishItemStatus status,  List<String> buyReasons,  List<String> resistReasons)  $default,) {final _that = this;
 switch (_that) {
 case _WishItem():
-return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_that.createdAt,_that.decidedAt,_that.status);case _:
+return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_that.createdAt,_that.decidedAt,_that.status,_that.buyReasons,_that.resistReasons);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -201,10 +203,10 @@ return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_tha
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  double? price,  String? category,  String? reason,  DateTime createdAt,  DateTime? decidedAt,  WishItemStatus status)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( String id,  String name,  double? price,  String? category,  String? reason,  DateTime createdAt,  DateTime? decidedAt,  WishItemStatus status,  List<String> buyReasons,  List<String> resistReasons)?  $default,) {final _that = this;
 switch (_that) {
 case _WishItem() when $default != null:
-return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_that.createdAt,_that.decidedAt,_that.status);case _:
+return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_that.createdAt,_that.decidedAt,_that.status,_that.buyReasons,_that.resistReasons);case _:
   return null;
 
 }
@@ -216,7 +218,7 @@ return $default(_that.id,_that.name,_that.price,_that.category,_that.reason,_tha
 @JsonSerializable()
 
 class _WishItem implements WishItem {
-  const _WishItem({required this.id, required this.name, this.price, this.category, this.reason, required this.createdAt, this.decidedAt, this.status = WishItemStatus.waiting});
+  const _WishItem({required this.id, required this.name, this.price, this.category, this.reason, required this.createdAt, this.decidedAt, this.status = WishItemStatus.waiting, this.buyReasons = const [], this.resistReasons = const []});
   factory _WishItem.fromJson(Map<String, dynamic> json) => _$WishItemFromJson(json);
 
 @override final  String id;
@@ -227,6 +229,8 @@ class _WishItem implements WishItem {
 @override final  DateTime createdAt;
 @override final  DateTime? decidedAt;
 @override@JsonKey() final  WishItemStatus status;
+@override@JsonKey() final  List<String> buyReasons;
+@override@JsonKey() final  List<String> resistReasons;
 
 /// Create a copy of WishItem
 /// with the given fields replaced by the non-null parameter values.
@@ -241,16 +245,16 @@ Map<String, dynamic> toJson() {
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WishItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.price, price) || other.price == price)&&(identical(other.category, category) || other.category == category)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.status, status) || other.status == status));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _WishItem&&(identical(other.id, id) || other.id == id)&&(identical(other.name, name) || other.name == name)&&(identical(other.price, price) || other.price == price)&&(identical(other.category, category) || other.category == category)&&(identical(other.reason, reason) || other.reason == reason)&&(identical(other.createdAt, createdAt) || other.createdAt == createdAt)&&(identical(other.decidedAt, decidedAt) || other.decidedAt == decidedAt)&&(identical(other.status, status) || other.status == status)&&(identical(other.buyReasons, buyReasons) || other.buyReasons == buyReasons)&&(identical(other.resistReasons, resistReasons) || other.resistReasons == resistReasons));
 }
 
 @JsonKey(includeFromJson: false, includeToJson: false)
 @override
-int get hashCode => Object.hash(runtimeType,id,name,price,category,reason,createdAt,decidedAt,status);
+int get hashCode => Object.hash(runtimeType,id,name,price,category,reason,createdAt,decidedAt,status,buyReasons,resistReasons);
 
 @override
 String toString() {
-  return 'WishItem(id: $id, name: $name, price: $price, category: $category, reason: $reason, createdAt: $createdAt, decidedAt: $decidedAt, status: $status)';
+  return 'WishItem(id: $id, name: $name, price: $price, category: $category, reason: $reason, createdAt: $createdAt, decidedAt: $decidedAt, status: $status, buyReasons: $buyReasons, resistReasons: $resistReasons)';
 }
 
 
@@ -261,7 +265,7 @@ abstract mixin class _$WishItemCopyWith<$Res> implements $WishItemCopyWith<$Res>
   factory _$WishItemCopyWith(_WishItem value, $Res Function(_WishItem) _then) = __$WishItemCopyWithImpl;
 @override @useResult
 $Res call({
- String id, String name, double? price, String? category, String? reason, DateTime createdAt, DateTime? decidedAt, WishItemStatus status
+ String id, String name, double? price, String? category, String? reason, DateTime createdAt, DateTime? decidedAt, WishItemStatus status, List<String> buyReasons, List<String> resistReasons
 });
 
 
@@ -278,7 +282,7 @@ class __$WishItemCopyWithImpl<$Res>
 
 /// Create a copy of WishItem
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? price = freezed,Object? category = freezed,Object? reason = freezed,Object? createdAt = null,Object? decidedAt = freezed,Object? status = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? id = null,Object? name = null,Object? price = freezed,Object? category = freezed,Object? reason = freezed,Object? createdAt = null,Object? decidedAt = freezed,Object? status = null,Object? buyReasons = null,Object? resistReasons = null,}) {
   return _then(_WishItem(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
 as String,name: null == name ? _self.name : name // ignore: cast_nullable_to_non_nullable
@@ -288,7 +292,9 @@ as String?,reason: freezed == reason ? _self.reason : reason // ignore: cast_nul
 as String?,createdAt: null == createdAt ? _self.createdAt : createdAt // ignore: cast_nullable_to_non_nullable
 as DateTime,decidedAt: freezed == decidedAt ? _self.decidedAt : decidedAt // ignore: cast_nullable_to_non_nullable
 as DateTime?,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
-as WishItemStatus,
+as WishItemStatus,buyReasons: null == buyReasons ? _self.buyReasons : buyReasons // ignore: cast_nullable_to_non_nullable
+as List<String>,resistReasons: null == resistReasons ? _self.resistReasons : resistReasons // ignore: cast_nullable_to_non_nullable
+as List<String>,
   ));
 }
 

@@ -18,20 +18,25 @@ import '../providers/nickname_provider.dart';
 import '../providers/notification_settings_provider.dart';
 import '../providers/savings_goal_provider.dart';
 
-// 만원/억원 단위로 축약 (예: 12,340,000 → 1,234만원)
+// 금액 표기: 10만원 이상 → N만원 (정수), 미만 → N,000원 (콤마)
 String _shortAmount(int amount) {
   if (amount <= 0) return '0원';
   if (amount >= 100000000) {
-    final eok = amount / 100000000;
-    final str = eok % 1 == 0 ? eok.toInt().toString() : eok.toStringAsFixed(1);
-    return '$str억원';
+    final eok = amount ~/ 100000000;
+    final rem = (amount % 100000000) ~/ 10000;
+    return rem > 0 ? '$eok억 $rem만원' : '$eok억원';
   }
-  if (amount >= 10000) {
-    final man = amount / 10000;
-    final str = man % 1 == 0 ? man.toInt().toString() : man.toStringAsFixed(1);
-    return '$str만원';
+  if (amount >= 100000) {
+    return '${amount ~/ 10000}만원';
   }
-  return '$amount원';
+  // 10만원 미만: 콤마 포맷
+  final str = amount.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < str.length; i++) {
+    if (i > 0 && (str.length - i) % 3 == 0) buf.write(',');
+    buf.write(str[i]);
+  }
+  return '$buf원';
 }
 
 
@@ -284,12 +289,28 @@ class _GoalAndStatsCard extends ConsumerWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '💰 ${_shortAmount(savedAmount)} 아꼈어요',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: savedAmount > 0 ? AppColors.green : colors.textPrimary,
+                    RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: _shortAmount(savedAmount),
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                              color: savedAmount > 0 ? AppColors.green : colors.textPrimary,
+                            ),
+                          ),
+                          TextSpan(
+                            text: ' 아꼈어요',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: savedAmount > 0
+                                  ? AppColors.green.withValues(alpha: 0.8)
+                                  : colors.textTertiary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 2),

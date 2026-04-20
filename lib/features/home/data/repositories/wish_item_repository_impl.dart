@@ -71,6 +71,17 @@ class FirestoreWishItemRepository implements WishItemRepository {
   }
 
   @override
+  Future<void> updateReasons(String id, {required List<String> buyReasons, required List<String> resistReasons}) async {
+    _cached = _cached
+        .map((item) => item.id == id ? item.copyWith(buyReasons: buyReasons, resistReasons: resistReasons) : item)
+        .toList();
+    await _col.doc(id).update({
+      'buyReasons': buyReasons,
+      'resistReasons': resistReasons,
+    });
+  }
+
+  @override
   Future<void> deleteItem(String id) async {
     _cached = _cached.where((item) => item.id != id).toList();
     await _col.doc(id).delete();
@@ -92,6 +103,14 @@ class FirestoreWishItemRepository implements WishItemRepository {
     final decidedAt = data['decidedAt'] != null
         ? (data['decidedAt'] as Timestamp).toDate()
         : null;
+    final buyReasons = (data['buyReasons'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ??
+        [];
+    final resistReasons = (data['resistReasons'] as List<dynamic>?)
+            ?.map((e) => e as String)
+            .toList() ??
+        [];
     return WishItem(
       id: doc.id,
       name: data['name'] as String,
@@ -101,6 +120,8 @@ class FirestoreWishItemRepository implements WishItemRepository {
       createdAt: createdAt,
       decidedAt: decidedAt,
       status: status,
+      buyReasons: buyReasons,
+      resistReasons: resistReasons,
     );
   }
 
@@ -112,6 +133,8 @@ class FirestoreWishItemRepository implements WishItemRepository {
         'createdAt': Timestamp.fromDate(item.createdAt),
         if (item.decidedAt != null) 'decidedAt': Timestamp.fromDate(item.decidedAt!),
         'status': item.status.name,
+        'buyReasons': item.buyReasons,
+        'resistReasons': item.resistReasons,
       };
 }
 
@@ -132,6 +155,9 @@ class _EmptyWishItemRepository implements WishItemRepository {
 
   @override
   Future<void> updateStatus(String id, WishItemStatus status) async {}
+
+  @override
+  Future<void> updateReasons(String id, {required List<String> buyReasons, required List<String> resistReasons}) async {}
 
   @override
   Future<void> deleteItem(String id) async {}

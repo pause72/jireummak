@@ -17,6 +17,8 @@ abstract class WishItem with _$WishItem {
     required DateTime createdAt,
     DateTime? decidedAt,
     @Default(WishItemStatus.waiting) WishItemStatus status,
+    @Default([]) List<String> buyReasons,
+    @Default([]) List<String> resistReasons,
   }) = _WishItem;
 
   factory WishItem.fromJson(Map<String, dynamic> json) =>
