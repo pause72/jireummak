@@ -871,7 +871,7 @@ Future<void> _confirmDeletePost(
 
 // ── 게시글 상세 페이지 ─────────────────────────────────────
 
-class _PostDetailPage extends ConsumerWidget {
+class _PostDetailPage extends ConsumerStatefulWidget {
   const _PostDetailPage({
     required this.post,
     required this.currentUid,
@@ -886,10 +886,33 @@ class _PostDetailPage extends ConsumerWidget {
   final Color avatarColor;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PostDetailPage> createState() => _PostDetailPageState();
+}
+
+class _PostDetailPageState extends ConsumerState<_PostDetailPage> {
+  late bool _isLiked;
+  late int _likesCount;
+
+  @override
+  void initState() {
+    super.initState();
+    _isLiked = widget.currentUid != null && widget.post.isLikedBy(widget.currentUid!);
+    _likesCount = widget.post.likesCount;
+  }
+
+  void _handleLike() {
+    if (widget.onLike == null) return;
+    setState(() {
+      _isLiked = !_isLiked;
+      _likesCount += _isLiked ? 1 : -1;
+    });
+    widget.onLike!();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final colors = context.colors;
-    final isReview = post.type == PostType.review;
-    final isLiked = currentUid != null && post.isLikedBy(currentUid!);
+    final isReview = widget.post.type == PostType.review;
 
     return Scaffold(
       backgroundColor: colors.background,
@@ -905,11 +928,11 @@ class _PostDetailPage extends ConsumerWidget {
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.textPrimary),
         ),
         actions: [
-          if (currentUid == post.uid)
+          if (widget.currentUid == widget.post.uid)
             Padding(
               padding: const EdgeInsets.only(right: 4),
               child: _PostMoreButton(
-                post: post,
+                post: widget.post,
                 colors: colors,
                 iconSize: 20,
                 onEdit: () => showModalBottomSheet<void>(
@@ -917,12 +940,12 @@ class _PostDetailPage extends ConsumerWidget {
                   isScrollControlled: true,
                   backgroundColor: Colors.transparent,
                   builder: (_) => _EditPostSheet(
-                    post: post,
+                    post: widget.post,
                     onSuccess: () => Navigator.of(context).pop(),
                   ),
                 ),
                 onDelete: () async {
-                  await _confirmDeletePost(context, ref, post.id);
+                  await _confirmDeletePost(context, ref, widget.post.id);
                   if (context.mounted) Navigator.of(context).pop();
                 },
               ),
@@ -940,16 +963,16 @@ class _PostDetailPage extends ConsumerWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: avatarColor.withValues(alpha: 0.15),
+                    color: widget.avatarColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Center(
                     child: Text(
-                      displayNickname.isNotEmpty ? displayNickname[0] : '?',
+                      widget.displayNickname.isNotEmpty ? widget.displayNickname[0] : '?',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: avatarColor,
+                        color: widget.avatarColor,
                       ),
                     ),
                   ),
@@ -960,7 +983,7 @@ class _PostDetailPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        displayNickname,
+                        widget.displayNickname,
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -968,7 +991,7 @@ class _PostDetailPage extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        post.relativeDate,
+                        widget.post.relativeDate,
                         style: TextStyle(fontSize: 12, color: colors.textTertiary),
                       ),
                     ],
@@ -993,7 +1016,7 @@ class _PostDetailPage extends ConsumerWidget {
                 ),
               ],
             ),
-            if (post.itemName != null && post.itemName!.isNotEmpty) ...[
+            if (widget.post.itemName != null && widget.post.itemName!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -1007,10 +1030,10 @@ class _PostDetailPage extends ConsumerWidget {
                     Icon(Icons.timer_outlined, size: 14, color: colors.textTertiary),
                     const SizedBox(width: 6),
                     Text(
-                      AppStrings.exploreResistStatus(post.resisted, post.itemName ?? ''),
+                      AppStrings.exploreResistStatus(widget.post.resisted, widget.post.itemName ?? ''),
                       style: TextStyle(
                         fontSize: 13,
-                        color: post.resisted ? AppColors.blue : colors.textSecondary,
+                        color: widget.post.resisted ? AppColors.blue : colors.textSecondary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1020,25 +1043,25 @@ class _PostDetailPage extends ConsumerWidget {
             ],
             const SizedBox(height: 20),
             Text(
-              post.content,
+              widget.post.content,
               style: TextStyle(fontSize: 15, height: 1.8, color: colors.textPrimary),
             ),
             const SizedBox(height: 24),
             GestureDetector(
-              onTap: onLike,
+              onTap: widget.onLike == null ? null : _handleLike,
               child: Row(
                 children: [
                   Icon(
-                    isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                    _isLiked ? Icons.favorite_rounded : Icons.favorite_border_rounded,
                     size: 18,
-                    color: isLiked ? AppColors.red : colors.textTertiary,
+                    color: _isLiked ? AppColors.red : colors.textTertiary,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '${post.likesCount}',
+                    '$_likesCount',
                     style: TextStyle(
                       fontSize: 13,
-                      color: isLiked ? AppColors.red : colors.textTertiary,
+                      color: _isLiked ? AppColors.red : colors.textTertiary,
                     ),
                   ),
                 ],
