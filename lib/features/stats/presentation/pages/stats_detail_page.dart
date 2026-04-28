@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/home/domain/models/wish_stats.dart';
 import '../../../../features/home/presentation/providers/wish_item_provider.dart';
@@ -23,7 +24,7 @@ class StatsDetailPage extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
-          '통계',
+          AppStrings.statsPageTitle,
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
@@ -41,17 +42,17 @@ class StatsDetailPage extends ConsumerWidget {
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _StatCard(label: '참음', value: '${stats.cancelledCount}번', icon: Icons.self_improvement_rounded, color: AppColors.blue)),
+                Expanded(child: _StatCard(label: AppStrings.myResisted, value: '${stats.cancelledCount}번', icon: Icons.self_improvement_rounded, color: AppColors.blue)),
                 const SizedBox(width: 12),
-                Expanded(child: _StatCard(label: '구매', value: '${stats.purchasedCount}번', icon: Icons.shopping_bag_outlined, color: AppColors.green)),
+                Expanded(child: _StatCard(label: AppStrings.myPurchased, value: '${stats.purchasedCount}번', icon: Icons.shopping_bag_outlined, color: AppColors.green)),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _StatCard(label: '참기', value: '${stats.waitingCount}개', icon: Icons.timer_outlined, color: AppColors.yellow)),
+                Expanded(child: _StatCard(label: AppStrings.statsWaitingLabel, value: '${stats.waitingCount}개', icon: Icons.timer_outlined, color: AppColors.yellow)),
                 const SizedBox(width: 12),
-                Expanded(child: _StatCard(label: '총 등록', value: '${stats.totalCount}개', icon: Icons.list_alt_rounded, color: AppColors.accent)),
+                Expanded(child: _StatCard(label: AppStrings.myTotalRegistered, value: '${stats.totalCount}개', icon: Icons.list_alt_rounded, color: AppColors.accent)),
               ],
             ),
             if (stats.decidedCount > 0) ...[
@@ -91,12 +92,12 @@ class _SavedAmountCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            '총 절약 금액',
+            AppStrings.myTotalSaved,
             style: TextStyle(fontSize: 13, color: AppColors.accent, fontWeight: FontWeight.w500, letterSpacing: 0.5),
           ),
           const SizedBox(height: 10),
           Text(
-            stats.savedAmount == 0 ? '₩ 0원' : stats.formattedSaved,
+            stats.savedAmount == 0 ? AppStrings.amountZero : stats.formattedSaved,
             style: TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w700,
@@ -106,7 +107,7 @@ class _SavedAmountCard extends StatelessWidget {
           ),
           if (stats.spentAmount > 0) ...[
             const SizedBox(height: 8),
-            Text('구매 지출 ${stats.formattedSpent}', style: TextStyle(fontSize: 12, color: colors.textTertiary)),
+            Text(AppStrings.statsSpent(stats.formattedSpent), style: TextStyle(fontSize: 12, color: colors.textTertiary)),
           ],
         ],
       ),
@@ -168,7 +169,7 @@ class _SaveRateCard extends StatelessWidget {
          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('충동구매 저항률', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.textPrimary)),
+              Text(AppStrings.myResistanceRate, style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: colors.textPrimary)),
               Text('$percent%', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.accent)),
             ],
           ),
@@ -184,7 +185,7 @@ class _SaveRateCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '결정한 ${stats.decidedCount}건 중 ${stats.cancelledCount}건 참음',
+            AppStrings.statsResistSummary(stats.decidedCount, stats.cancelledCount),
             style: TextStyle(fontSize: 12, color: colors.textTertiary),
           ),
         ],
@@ -222,10 +223,10 @@ class _MotivationCard extends StatelessWidget {
   }
 
   (String, String) _getMessage(WishStats s) {
-    if (s.totalCount == 0) return ('아직 기록이 없어요.', '갖고 싶은 게 생기면 글쓰기버튼으로 72시간 참기를 시작해보세요.');
-    if (s.cancelledCount == 0) return ('아직 참은 항목이 없어요.', '72시간이 지나면 진짜 필요한지 다시 생각해보세요.');
-    if (s.saveRate >= 0.8) return ('대단해요! 충동구매를 잘 참고 있어요.', '절약한 금액으로 더 의미 있는 것에 투자해보세요.');
-    if (s.saveRate >= 0.5) return ('좋은 습관을 만들어가고 있어요.', '72시간 후 다시 생각하면 불필요한 소비가 보여요.');
-    return ('조금씩 더 참아봐요.', '충동구매를 줄이면 소비 습관이 달라져요.');
+    if (s.totalCount == 0) return (AppStrings.statsEmptyMessage, AppStrings.statsEmptySubMessage);
+    if (s.cancelledCount == 0) return (AppStrings.statsNoCancelMessage, AppStrings.statsNoCancelSubMessage);
+    if (s.saveRate >= 0.8) return (AppStrings.statsHighRateMessage, AppStrings.statsHighRateSubMessage);
+    if (s.saveRate >= 0.5) return (AppStrings.statsMidRateMessage, AppStrings.statsMidRateSubMessage);
+    return (AppStrings.statsLowRateMessage, AppStrings.statsLowRateSubMessage);
   }
 }

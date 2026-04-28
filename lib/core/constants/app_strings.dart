@@ -44,6 +44,9 @@ class AppStrings {
   static const onboarding3Body = '72시간이 지나도 여전히 갖고 싶다면,\n그때 사세요. 그게 진짜 소비예요.';
 
   // ── 로그인 ───────────────────────────────────────────────
+  static const loginSimpleStart = '간편하게 시작하기';
+  static const loginGoogleContinue = 'Google로 계속하기';
+  static const loginKakaoContinue = '카카오로 계속하기';
   static const loginContinueWith = 'SNS 계정으로 계속하기';
   static const loginRequired = '로그인이 필요해요';
   static const loginGooglePrompt = 'Google 로그인으로 데이터를 보관하세요';
@@ -117,6 +120,8 @@ class AppStrings {
   static const exploreWriteTipTitle = '다른 사람에게 도움이 될 팁을 알려주세요 💡';
   static const exploreSubmitSuccess = '좋은 경험을 나눠주셔서 감사해요 🙌';
   static const exploreHelpOthers = '이 글이 다른 사람의 참기에 도움이 됩니다';
+  static const exploreTodayResisted = '오늘 참기 성공';
+  static const exploreReviewCountLabel = '실전 후기';
   static const exploreMenuEdit = '수정';
   static const exploreMenuDelete = '삭제';
   static const exploreDeleteTitle = '게시글을 삭제할까요?';
@@ -151,6 +156,8 @@ class AppStrings {
   static const myPurchased = '구매';
   static const myTotalRegistered = '총 등록';
   static const myResistanceRate = '충동구매 저항률';
+  static const myHeroResisted = '참기 성공';
+  static const myHeroTotalTime = '총 참기 시간';
   static const myNicknameHint = '닉네임 1회 변경 가능';
   static const myTheme = '테마';
 
@@ -202,7 +209,7 @@ class AppStrings {
   // ── 배움 콘텐츠 — 72시간 룰 ──────────────────────────────
   static const rule1Title = '왜 72시간인가?';
   static const rule1Body =
-      '충동구매 욕구의 피크는 처음 24시간 안에 옵니다. 72시간(3일)이 지나면 욕구가 평균 80% 이상 감소한다는 연구 결과가 있습니다.';
+      '충동구매 욕구의 피크는 처음 24시간 안에 옵니다. 72시간이 지나면 욕구가 평균 80% 이상 감소한다는 연구 결과가 있습니다.';
   static const rule2Title = '감정과 구매의 연결';
   static const rule2Body =
       '스트레스, 지루함, 슬픔을 쇼핑으로 해소하려는 패턴을 인식하세요. 감정이 격할 때 등록한 아이템은 72시간 후 대부분 필요 없어집니다.';
@@ -232,7 +239,7 @@ class AppStrings {
     '지금 이 참음이 나중의 여유가 돼요 💰',
     '충동을 이겼어요. 대단해요! 🎉',
     '현명한 소비를 선택했어요 💪',
-    '3일 후 다시 물어볼게요. 그때도 사고 싶으면 그때 사요 😊',
+    '72시간 후 다시 물어볼게요. 그때도 사고 싶으면 그때 사요 😊',
   ];
 
   // ── 참기 카드 - 추가 ─────────────────────────────────────
@@ -249,18 +256,18 @@ class AppStrings {
   static const reasonsFieldHint = '이유 입력 (선택)';
   static const reasonsAddButton = '이유 추가';
   static const reasonsCtaButton = '기록';
-  static const reasonsHint1 = '3일 뒤에도 이 이유가 유효할까요?';
+  static const reasonsHint1 = '72시간 뒤에도 이 이유가 유효할까요?';
   static const reasonsHint2 = '72시간 뒤의 나에게 맡겨보세요';
 
   // 비율바 레이블
   static const reasonsRatioEqual = '필요한 이유와 필요없는 이유가 같아요';
-  static const reasonsRatioBuyMore = '필요한 이유가 더 많아요 — 3일 뒤에 다시 확인해봐요';
+  static const reasonsRatioBuyMore = '필요한 이유가 더 많아요 — 72시간 뒤에 다시 확인해봐요';
   static const reasonsRatioResistMore = '필요없는 이유가 더 많아요 💪';
 
   // 저장 후 피드백 스낵바
   static const reasonsFeedbackDefault = '이미 충분히 고민하고 있어요 👍';
   static const reasonsFeedbackResistMore = '필요없는 이유가 더 많아요. 72시간 뒤에 다시 생각해봐요!';
-  static const reasonsFeedbackBuyMore = '필요한 이유가 있네요. 3일 뒤에도 같은 마음인지 확인해봐요.';
+  static const reasonsFeedbackBuyMore = '필요한 이유가 있네요. 72시간 뒤에도 같은 마음인지 확인해봐요.';
   static String reasonsFilledCount(int n) => '$n개';
 
   // 추천 칩
@@ -303,9 +310,13 @@ class AppStrings {
   static String recordPurchasedAgo(String ago) => '구매 $ago';
 
   // ── 통계 탭 ───────────────────────────────────────────────
+  static const statsPageTitle = '통계';
+  static const amountZero = '₩ 0원';
   static const statsWaitingLabel = '참기';
   static String statsDecisionSummary(int decided, int cancelled) =>
       '결정한 $decided건 중 $cancelled건 취소';
+  static String statsResistSummary(int decided, int cancelled) =>
+      '결정한 $decided건 중 $cancelled건 참음';
   static String statsSpent(String amount) => '구매 지출 $amount';
   static const statsEmptyMessage = '아직 기록이 없어요.';
   static const statsEmptySubMessage =
@@ -323,6 +334,11 @@ class AppStrings {
   static const nicknameChangeInfo = '30일에 한 번 변경할 수 있어요.';
   static String nicknameChangeDays(int d) => '$d일 후에 변경할 수 있어요.';
   static const nicknameRequired = '닉네임을 입력해주세요.';
+  static const nicknameLoginRequired = '로그인이 필요해요.';
+  static const nicknameSameAsCurrent = '현재 닉네임과 같아요.';
+  static const nicknameDuplicate = '이미 사용 중인 닉네임이에요.';
+  static const nicknamePermissionDenied = '변경 권한이 없어요. 다시 로그인 후 시도해 주세요.';
+  static const nicknameErrorRetry = '오류가 발생했어요. 다시 시도해 주세요.';
 
   // ── 마이 - 절약 목표 다이얼로그 ──────────────────────────
   static const goalAddDialogTitle = '어떤 목표를 위해 참을까요?';
@@ -336,14 +352,27 @@ class AppStrings {
   static const goalAmountFieldHint = '목표 금액';
   static const goalEditShortLabel = '수정';
   static const goalAddShortLabel = '추가';
+  static const goalQuickAdd1M = '+100만';
+  static const goalQuickAdd5M = '+500만';
+  static const goalQuickAdd10M = '+1000만';
 
   // ── 마이 - 레벨 / 진행 피드백 ──────────────────────────────
-  static String levelBadge(int count) {
-    if (count >= 50) return '🏆 Lv.5 절약마스터';
-    if (count >= 20) return '💎 Lv.4 절약왕';
-    if (count >= 10) return '🔥 Lv.3 참기고수';
-    if (count >= 5) return '💪 Lv.2 절약러';
+  // 레벨: 총 참기 일수(totalResistHours ~/ 24) 기준
+  // Lv.1 < 7일 / Lv.2 7일+ / Lv.3 30일+ / Lv.4 100일+ / Lv.5 365일+
+  static String levelBadge(int days) {
+    if (days >= 365) return '🏆 Lv.5 절약마스터';
+    if (days >= 100) return '💎 Lv.4 절약왕';
+    if (days >= 30) return '🔥 Lv.3 참기고수';
+    if (days >= 7) return '💪 Lv.2 절약러';
     return '🌱 Lv.1 절약 입문';
+  }
+
+  static String? levelNextInfo(int days) {
+    if (days >= 365) return null;
+    if (days >= 100) return '다음 레벨까지 ${365 - days}일';
+    if (days >= 30) return '다음 레벨까지 ${100 - days}일';
+    if (days >= 7) return '다음 레벨까지 ${30 - days}일';
+    return '다음 레벨까지 ${7 - days}일';
   }
 
   static String progressFeedback(double progress) {

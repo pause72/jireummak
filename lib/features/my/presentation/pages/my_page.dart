@@ -590,19 +590,31 @@ class _ProfileCard extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
           const SizedBox(height: 10),
-          // ── 레벨 뱃지
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-            decoration: BoxDecoration(
-              color: AppColors.accent.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
-            ),
-            child: Text(
-              AppStrings.levelBadge(stats.cancelledCount),
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent),
-            ),
-          ),
+          // ── 레벨 뱃지 + 다음 레벨 힌트
+          Builder(builder: (context) {
+            final days = stats.totalResistHours ~/ 24;
+            final nextInfo = AppStrings.levelNextInfo(days);
+            return Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: AppColors.accent.withValues(alpha: 0.3)),
+                  ),
+                  child: Text(
+                    AppStrings.levelBadge(days),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.accent),
+                  ),
+                ),
+                if (nextInfo != null) ...[
+                  const SizedBox(height: 5),
+                  Text(nextInfo, style: TextStyle(fontSize: 10, color: context.colors.textTertiary)),
+                ],
+              ],
+            );
+          }),
           const SizedBox(height: 16),
           Divider(height: 1, color: AppColors.accent.withValues(alpha: 0.15)),
           const SizedBox(height: 16),
@@ -613,14 +625,14 @@ class _ProfileCard extends StatelessWidget {
               _HeroStat(
                 emoji: '🔥',
                 value: '${stats.cancelledCount}번',
-                label: '참기 성공',
+                label: AppStrings.myHeroResisted,
                 colors: colors,
               ),
               Container(width: 1, height: 32, color: AppColors.accent.withValues(alpha: 0.2)),
               _HeroStat(
-                emoji: '💰',
-                value: stats.savedAmount > 0 ? _shortAmount(stats.savedAmount.toInt()) : '—',
-                label: '충동구매 방어',
+                emoji: '⏱',
+                value: stats.totalResistHours > 0 ? stats.formattedResistTime : '—',
+                subLabel: stats.formattedResistSubLabel,
                 colors: colors,
               ),
             ],
@@ -665,14 +677,16 @@ class _HeroStat extends StatelessWidget {
   const _HeroStat({
     required this.emoji,
     required this.value,
-    required this.label,
     required this.colors,
+    this.subLabel,
+    this.label,
   });
 
   final String emoji;
   final String value;
-  final String label;
   final AppColors colors;
+  final String? subLabel;
+  final String? label;
 
   @override
   Widget build(BuildContext context) {
@@ -689,8 +703,14 @@ class _HeroStat extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 3),
-        Text(label, style: TextStyle(fontSize: 10, color: colors.textTertiary)),
+        if (subLabel != null) ...[
+          const SizedBox(height: 2),
+          Text(subLabel!, style: TextStyle(fontSize: 10, color: colors.textSecondary)),
+        ],
+        if (label != null) ...[
+          const SizedBox(height: 3),
+          Text(label!, style: TextStyle(fontSize: 10, color: colors.textTertiary)),
+        ],
       ],
     );
   }
@@ -1610,11 +1630,11 @@ class _QuickAmountChips extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _AmountChip(label: '+100만', amount: 1000000, onAdd: onAdd),
+        _AmountChip(label: AppStrings.goalQuickAdd1M, amount: 1000000, onAdd: onAdd),
         const SizedBox(width: 6),
-        _AmountChip(label: '+500만', amount: 5000000, onAdd: onAdd),
+        _AmountChip(label: AppStrings.goalQuickAdd5M, amount: 5000000, onAdd: onAdd),
         const SizedBox(width: 6),
-        _AmountChip(label: '+1000만', amount: 10000000, onAdd: onAdd),
+        _AmountChip(label: AppStrings.goalQuickAdd10M, amount: 10000000, onAdd: onAdd),
       ],
     );
   }

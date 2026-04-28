@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
+import '../../../../core/constants/app_strings.dart';
 import '../../../../core/theme/theme_provider.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -137,16 +138,16 @@ class NicknameNotifier extends _$NicknameNotifier {
   /// 반환값: null = 성공, 에러 메시지 문자열 = 실패
   Future<String?> setNickname(String newNick) async {
     final trimmed = newNick.trim();
-    if (trimmed.isEmpty) return '닉네임을 입력해주세요.';
+    if (trimmed.isEmpty) return AppStrings.nicknameRequired;
 
     if (!state.canChange) {
-      return '${state.daysUntilNextChange}일 후에 변경할 수 있어요.';
+      return AppStrings.nicknameChangeDays(state.daysUntilNextChange);
     }
 
     final user = ref.read(authStateProvider).valueOrNull;
-    if (user == null) return '로그인이 필요해요.';
+    if (user == null) return AppStrings.nicknameLoginRequired;
 
-    if (trimmed == state.nickname) return '현재 닉네임과 같아요.';
+    if (trimmed == state.nickname) return AppStrings.nicknameSameAsCurrent;
 
     state = state.copyWith(isLoading: true);
 
@@ -187,18 +188,18 @@ class NicknameNotifier extends _$NicknameNotifier {
       return null;
     } on _DuplicateNicknameException {
       state = state.copyWith(isLoading: false);
-      return '이미 사용 중인 닉네임이에요.';
+      return AppStrings.nicknameDuplicate;
     } on FirebaseException catch (e) {
       debugPrint('[NicknameNotifier] setNickname failed: $e');
       state = state.copyWith(isLoading: false);
       if (e.code == 'permission-denied') {
-        return '변경 권한이 없어요. 다시 로그인 후 시도해 주세요.';
+        return AppStrings.nicknamePermissionDenied;
       }
-      return '오류가 발생했어요. 다시 시도해 주세요.';
+      return AppStrings.nicknameErrorRetry;
     } catch (e) {
       debugPrint('[NicknameNotifier] setNickname failed: $e');
       state = state.copyWith(isLoading: false);
-      return '오류가 발생했어요. 다시 시도해 주세요.';
+      return AppStrings.nicknameErrorRetry;
     }
   }
 

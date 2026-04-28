@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/constants/app_strings.dart';
 import '../core/theme/theme_provider.dart';
 import 'router.dart';
 
@@ -13,7 +14,7 @@ class App extends ConsumerWidget {
     final themeMode = ref.watch(themeNotifierProvider);
 
     return MaterialApp.router(
-      title: '지름막',
+      title: AppStrings.appName,
       routerConfig: router,
       themeMode: themeMode,
       theme: _lightTheme,

@@ -98,7 +98,7 @@ class LoginPage extends ConsumerWidget {
                     const Spacer(flex: 3),
                     // 로그인 CTA
                     const Text(
-                      '간편하게 시작하기',
+                      AppStrings.loginSimpleStart,
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF4E5E7A),
@@ -184,8 +184,8 @@ class _LoginButton extends StatelessWidget {
       };
 
   String get _label => switch (provider) {
-        _SocialProvider.google => 'Google로 계속하기',
-        _SocialProvider.kakao => '카카오로 계속하기',
+        _SocialProvider.google => AppStrings.loginGoogleContinue,
+        _SocialProvider.kakao => AppStrings.loginKakaoContinue,
       };
 
   Widget get _icon => switch (provider) {

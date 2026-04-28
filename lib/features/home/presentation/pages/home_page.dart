@@ -177,7 +177,7 @@ class HomePage extends ConsumerWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('취소', style: TextStyle(fontSize: 14, color: colors.textTertiary)),
+              child: Text(AppStrings.cancel, style: TextStyle(fontSize: 14, color: colors.textTertiary)),
             ),
           ],
         ),

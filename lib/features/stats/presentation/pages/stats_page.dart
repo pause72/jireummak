@@ -92,7 +92,7 @@ class _SavedAmountCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            stats.savedAmount == 0 ? '₩ 0원' : stats.formattedSaved,
+            stats.savedAmount == 0 ? AppStrings.amountZero : stats.formattedSaved,
             style: TextStyle(
               fontSize: 34,
               fontWeight: FontWeight.w700,
