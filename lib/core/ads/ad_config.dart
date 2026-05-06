@@ -16,11 +16,11 @@ class AdConfig {
 
   // TODO: Play Store 게시 후 실제 ID로 교체 — ca-app-pub-9892920356540798/5997045287
   static String get nativeAdUnitId => Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/2247696110'
+      ? 'ca-app-pub-9892920356540798/5997045287'
       : 'ca-app-pub-3940256099942544/3986624511';
 
   // TODO: Play Store 게시 후 실제 ID로 교체 — ca-app-pub-9892920356540798/7534475318
   static String get rewardedAdUnitId => Platform.isAndroid
-      ? 'ca-app-pub-3940256099942544/5224354917'
+      ? 'ca-app-pub-9892920356540798/7534475318'
       : 'ca-app-pub-3940256099942544/1712485313';
 }

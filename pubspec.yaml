@@ -1,8 +1,8 @@
 name: pause72
-description: "A new Flutter project."
-publish_to: 'none'
+description: "Pause 72"
+publish_to: 'Pause 72'
 
-version: 1.0.0+14
+version: 1.0.0+16
 
 environment:
   sdk: ^3.11.3
