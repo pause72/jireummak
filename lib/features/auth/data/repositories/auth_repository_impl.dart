@@ -19,39 +19,26 @@ class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDatasource _datasource;
 
   @override
-  Stream<UserModel?> get authStateChanges {
-    return _datasource.authStateChanges.map(_mapFirebaseUser);
-  }
+  Stream<UserModel?> get authStateChanges =>
+      _datasource.authStateChanges.map(_mapFirebaseUser);
 
   @override
-  Future<UserModel> signInWithEmail({
-    required String email,
-    required String password,
-  }) async {
-    final credential = await _datasource.signInWithEmail(
-      email: email,
-      password: password,
-    );
+  UserModel? get currentUser => _mapFirebaseUser(_datasource.currentUser);
+
+  @override
+  Future<UserModel> signInWithGoogle() async {
+    final credential = await _datasource.signInWithGoogle();
     return _mapFirebaseUser(credential.user)!;
   }
 
   @override
-  Future<UserModel> signUpWithEmail({
-    required String email,
-    required String password,
-  }) async {
-    final credential = await _datasource.signUpWithEmail(
-      email: email,
-      password: password,
-    );
+  Future<UserModel> signInWithKakao() async {
+    final credential = await _datasource.signInWithKakao();
     return _mapFirebaseUser(credential.user)!;
   }
 
   @override
   Future<void> signOut() => _datasource.signOut();
-
-  @override
-  UserModel? get currentUser => _mapFirebaseUser(_datasource.currentUser);
 
   UserModel? _mapFirebaseUser(User? user) {
     if (user == null) return null;

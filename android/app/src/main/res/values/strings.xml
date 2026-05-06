@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- TODO: 네이버 개발자센터(https://developers.naver.com)에서 발급받은 키로 교체 -->
+    <string name="naver_client_id">YOUR_NAVER_CLIENT_ID</string>
+    <string name="naver_client_secret">YOUR_NAVER_CLIENT_SECRET</string>
+    <string name="naver_client_name">지름막</string>
+
+    <!-- TODO: 카카오 개발자센터(https://developers.kakao.com)에서 발급받은 키로 교체 -->
+    <string name="kakao_app_key">370369be3485ff3d48223c2229e1b351</string>
+    <string name="kakao_oauth_host">kakao370369be3485ff3d48223c2229e1b351</string>
+</resources>

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/constants/app_strings.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../explore/presentation/pages/explore_page.dart';
 import '../../../home/presentation/pages/home_page.dart';
 import '../../../my/presentation/pages/my_page.dart';
 import '../../../record/presentation/pages/record_page.dart';
-import '../../../stats/presentation/pages/stats_page.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -18,14 +20,16 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = const [
     HomePage(),
     RecordPage(),
-    StatsPage(),
+    ExplorePage(),
     MyPage(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: colors.background,
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -46,12 +50,12 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF0F0F0F),
-        border: Border(
-          top: BorderSide(color: Color(0xFF1E1E1E)),
-        ),
+      decoration: BoxDecoration(
+        color: colors.background,
+        border: Border(top: BorderSide(color: colors.borderLight)),
       ),
       child: BottomNavigationBar(
         currentIndex: currentIndex,
@@ -59,30 +63,30 @@ class _BottomNav extends StatelessWidget {
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        selectedItemColor: const Color(0xFF8B7CF6),
-        unselectedItemColor: const Color(0xFF444444),
+        selectedItemColor: AppColors.accent,
+        unselectedItemColor: colors.inactive,
         selectedFontSize: 11,
         unselectedFontSize: 11,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.pending_actions_outlined),
             activeIcon: Icon(Icons.pending_actions),
-            label: '대기중',
+            label: AppStrings.navResist,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.add_circle_outline),
             activeIcon: Icon(Icons.add_circle),
-            label: '기록',
+            label: AppStrings.navRecord,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.bar_chart_outlined),
-            activeIcon: Icon(Icons.bar_chart),
-            label: '통계',
+            icon: Icon(Icons.explore_outlined),
+            activeIcon: Icon(Icons.explore),
+            label: AppStrings.navExplore,
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline),
             activeIcon: Icon(Icons.person),
-            label: '마이',
+            label: AppStrings.navMy,
           ),
         ],
       ),

@@ -1,8 +1,18 @@
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
+import 'core/ads/interstitial_ad_service.dart';
+import 'core/ads/rewarded_ad_service.dart';
+import 'core/constants/social_auth_config.dart';
+import 'core/services/notification_service.dart';
+import 'core/theme/theme_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -11,9 +21,27 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Crashlytics: Flutter 프레임워크 에러 자동 수집
+  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  // Crashlytics: 비동기/플랫폼 에러 자동 수집
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // 카카오 SDK 초기화
+  KakaoSdk.init(nativeAppKey: SocialAuthConfig.kakaoNativeAppKey);
+  await MobileAds.instance.initialize();
+  await NotificationService().initialize();
+  InterstitialAdService.instance.load();
+  RewardedAdService.instance.load();
+  final prefs = await SharedPreferences.getInstance();
   runApp(
-    const ProviderScope(
-      child: App(),
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWith((_) => Future.value(prefs)),
+      ],
+      child: const App(),
     ),
   );
 }

@@ -16,23 +16,17 @@ class AuthNotifier extends _$AuthNotifier {
   @override
   AsyncValue<UserModel?> build() => const AsyncValue.data(null);
 
-  Future<void> signIn({required String email, required String password}) async {
+  Future<void> signInWithGoogle() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signInWithEmail(
-            email: email,
-            password: password,
-          ),
+      () => ref.read(authRepositoryProvider).signInWithGoogle(),
     );
   }
 
-  Future<void> signUp({required String email, required String password}) async {
+  Future<void> signInWithKakao() async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(
-      () => ref.read(authRepositoryProvider).signUpWithEmail(
-            email: email,
-            password: password,
-          ),
+      () => ref.read(authRepositoryProvider).signInWithKakao(),
     );
   }
 
